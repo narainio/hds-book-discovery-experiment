@@ -1,0 +1,1178 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: catalog
+    description: Book catalog, search and typeahead
+  - name: discovery
+    description: Session signals, ranking and shaping
+  - name: commerce
+    description: Cart and simulated checkout
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /modes:
+    get:
+      operationId: listModes
+      tags: [catalog]
+      summary: List shopping modes
+      description: Returns the shopping mode list. Only the Johnny mode is available; the rest are disabled.
+      responses:
+        "200":
+          description: Modes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ShoppingMode"
+
+  /prompts:
+    get:
+      operationId: listPrompts
+      tags: [catalog]
+      summary: List curated prompt suggestions
+      description: Curated starting points that map deterministically to catalog queries.
+      responses:
+        "200":
+          description: Prompts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CuratedPrompt"
+
+  /catalog/stats:
+    get:
+      operationId: getCatalogStats
+      tags: [catalog]
+      summary: Catalog summary for the active mode
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CatalogStats"
+
+  /typeahead:
+    get:
+      operationId: getTypeahead
+      tags: [catalog]
+      summary: Grouped typeahead suggestions
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Suggestions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TypeaheadResponse"
+
+  /books/{bookId}:
+    get:
+      operationId: getBook
+      tags: [catalog]
+      summary: Product detail
+      parameters:
+        - name: bookId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Book detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookDetail"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /session:
+    post:
+      operationId: createSession
+      tags: [discovery]
+      summary: Create an anonymous prototype session
+      responses:
+        "200":
+          description: Session state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionState"
+
+  /session/{sessionId}:
+    get:
+      operationId: getSession
+      tags: [discovery]
+      summary: Current session state and active signals
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Session state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionState"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /session/{sessionId}/filter:
+    post:
+      operationId: setFilter
+      tags: [discovery]
+      summary: Atomically commit one example and an independent direction with matching first-page results
+      description: Updates are serialized by a database row lock. Results are computed before committing. Clients serialize requests and replace session and results together. On ambiguous network failure reconcile with GET discover; retrying identical desired inputs is idempotent.
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FilterInput"
+      responses:
+        "200":
+          description: Committed session and matching first-page recommendations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiscoverResponse"
+        "400":
+          description: Invalid input; no change committed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Unknown session or book; no change committed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Computation or commit failed; transaction rolled back
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /session/{sessionId}/reset:
+    post:
+      operationId: resetSession
+      tags: [discovery]
+      summary: Reset discovery back to the mode-only starting state
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Session state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionState"
+
+  /session/{sessionId}/query:
+    put:
+      operationId: setQuery
+      tags: [discovery]
+      summary: Set the active natural-language direction
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryInput"
+      responses:
+        "200":
+          description: Session state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionState"
+    delete:
+      operationId: clearQuery
+      tags: [discovery]
+      summary: Clear only the query, leaving Filter and pivot intact
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Session state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionState"
+
+  /session/{sessionId}/picks:
+    get:
+      operationId: getPicks
+      tags: [discovery]
+      summary: Books in Johnny's Filter
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Filter
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PicksView"
+    post:
+      operationId: addPick
+      tags: [discovery]
+      summary: Add a book to Johnny's Filter (positive signal)
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PickInput"
+      responses:
+        "200":
+          description: Session state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionState"
+    delete:
+      operationId: clearPicks
+      tags: [discovery]
+      summary: Remove every book from Johnny's Filter
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Session state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionState"
+
+  /session/{sessionId}/picks/{bookId}:
+    delete:
+      operationId: removePick
+      tags: [discovery]
+      summary: Remove one book from Filter. Never records negative feedback.
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: bookId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Session state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionState"
+
+  /session/{sessionId}/pivot:
+    put:
+      operationId: setPivot
+      tags: [discovery]
+      summary: Show me more like this - set the single active product pivot
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PivotInput"
+      responses:
+        "200":
+          description: Session state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionState"
+    delete:
+      operationId: clearPivot
+      tags: [discovery]
+      summary: Clear the pivot without clearing query or Filter
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Session state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionState"
+
+  /session/{sessionId}/negatives:
+    post:
+      operationId: addNegative
+      tags: [discovery]
+      summary: Show me fewer books like this - explicit negative signal
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NegativeInput"
+      responses:
+        "200":
+          description: Session state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionState"
+
+  /session/{sessionId}/negatives/{bookId}:
+    delete:
+      operationId: removeNegative
+      tags: [discovery]
+      summary: Undo an explicit negative signal
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: bookId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Session state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionState"
+
+  /discover:
+    get:
+      operationId: getDiscover
+      tags: [discovery]
+      summary: Ranked catalog results with grounded reasons and shaping state
+      parameters:
+        - name: sessionId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: number
+            default: 0
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: number
+            default: 24
+      responses:
+        "200":
+          description: Ranked results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiscoverResponse"
+
+  /session/{sessionId}/cart:
+    get:
+      operationId: getCart
+      tags: [commerce]
+      summary: Cart contents
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Cart
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CartView"
+    post:
+      operationId: addCartItem
+      tags: [commerce]
+      summary: Add a book to the cart
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CartInput"
+      responses:
+        "200":
+          description: Cart
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CartView"
+
+  /session/{sessionId}/cart/{bookId}:
+    patch:
+      operationId: updateCartItem
+      tags: [commerce]
+      summary: Change the quantity of a cart line
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: bookId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CartUpdate"
+      responses:
+        "200":
+          description: Cart
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CartView"
+    delete:
+      operationId: removeCartItem
+      tags: [commerce]
+      summary: Remove a cart line
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: bookId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Cart
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CartView"
+
+  /session/{sessionId}/checkout:
+    post:
+      operationId: simulateCheckout
+      tags: [commerce]
+      summary: Simulated prototype checkout. No payment is taken.
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Simulated confirmation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckoutResult"
+
+  /events:
+    post:
+      operationId: recordEvent
+      tags: [discovery]
+      summary: Record a prototype interaction event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventInput"
+      responses:
+        "200":
+          description: Recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventAck"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+
+    ShoppingMode:
+      type: object
+      required: [id, label, available]
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        available:
+          type: boolean
+        note:
+          type: ["string", "null"]
+
+    CuratedPrompt:
+      type: object
+      required: [id, label, query]
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        query:
+          type: string
+
+    CatalogStats:
+      type: object
+      required: [totalBooks, modeLabel, gradeLabel]
+      properties:
+        totalBooks:
+          type: number
+        modeLabel:
+          type: string
+        gradeLabel:
+          type: string
+
+    BookSummary:
+      type: object
+      required: [id, title, author, coverImageUrl, hasCover, price, catalogPrice, currency, formatLabel]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        author:
+          type: string
+        seriesName:
+          type: ["string", "null"]
+        coverImageUrl:
+          type: ["string", "null"]
+        hasCover:
+          type: boolean
+        price:
+          type: ["number", "null"]
+          description: Selling price after the standard 20% reduction
+        catalogPrice:
+          type: ["number", "null"]
+          description: Original supplier catalog price
+        currency:
+          type: string
+        formatLabel:
+          type: string
+
+    BookThumb:
+      type: object
+      required: [id, title, coverImageUrl]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        coverImageUrl:
+          type: ["string", "null"]
+
+    RecommendationReason:
+      type: object
+      required: [code, text]
+      properties:
+        code:
+          type: string
+          description: Structured reason code, e.g. SIMILAR_TO_PICK, MATCHES_QUERY, SIMILAR_TO_PIVOT, SHARED_SERIES, SHARED_SUBJECTS
+        text:
+          type: string
+          description: Customer-facing text rendered from an approved template
+        sourceBookId:
+          type: ["string", "null"]
+        matchedSubjects:
+          type: array
+          items:
+            type: string
+
+    RankedBook:
+      type: object
+      required: [book, score]
+      properties:
+        book:
+          $ref: "#/components/schemas/BookSummary"
+        score:
+          type: number
+        reason:
+          oneOf:
+            - $ref: "#/components/schemas/RecommendationReason"
+            - type: "null"
+
+    Edition:
+      type: object
+      required: [binding, price, catalogPrice, available]
+      properties:
+        binding:
+          type: string
+        isbn:
+          type: ["string", "null"]
+        price:
+          type: ["number", "null"]
+          description: Selling price after the standard 20% reduction
+        catalogPrice:
+          type: ["number", "null"]
+          description: Original supplier catalog price
+        publisher:
+          type: ["string", "null"]
+        available:
+          type: boolean
+
+    BookDetail:
+      type: object
+      required:
+        - id
+        - title
+        - author
+        - description
+        - coverImageUrl
+        - hasCover
+        - price
+        - catalogPrice
+        - currency
+        - formatLabel
+        - readingLevel
+        - subjects
+        - displayTopics
+        - subjectSummary
+        - tags
+        - editions
+        - sourceUrl
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        author:
+          type: string
+        illustrator:
+          type: ["string", "null"]
+        seriesName:
+          type: ["string", "null"]
+        description:
+          type: string
+        coverImageUrl:
+          type: ["string", "null"]
+        hasCover:
+          type: boolean
+        price:
+          type: ["number", "null"]
+          description: Selling price after the standard 20% reduction
+        catalogPrice:
+          type: ["number", "null"]
+          description: Original supplier catalog price
+        currency:
+          type: string
+        formatLabel:
+          type: string
+        readingLevel:
+          type: string
+        publisher:
+          type: ["string", "null"]
+        publicationDate:
+          type: ["string", "null"]
+        availabilityLabel:
+          type: ["string", "null"]
+        subjects:
+          type: array
+          items:
+            type: string
+        displayTopics:
+          type: array
+          description: Customer-readable topics deterministically normalized from catalog metadata
+          items:
+            type: string
+        subjectSummary:
+          type: ["string", "null"]
+          description: Optional cached HDS interpretation grounded in catalog information; null when absent, invalid or stale
+        tags:
+          type: array
+          items:
+            type: string
+        editions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Edition"
+        sourceUrl:
+          type: string
+        whyItMaySuit:
+          type: ["string", "null"]
+          description: Grounded summary assembled from catalog fields only
+
+    ShapingSignal:
+      type: object
+      required: [kind, id, label, removable]
+      properties:
+        kind:
+          type: string
+          description: mode | query | pick | pivot | negative
+        id:
+          type: string
+        label:
+          type: string
+        removable:
+          type: boolean
+        coverImageUrl:
+          type: ["string", "null"]
+
+    ShapingState:
+      type: object
+      required: [modeLabel, hasSignals, summaryText, picks, negatives, signalCount]
+      properties:
+        modeLabel:
+          type: string
+        query:
+          type: ["string", "null"]
+        pivot:
+          oneOf:
+            - $ref: "#/components/schemas/BookThumb"
+            - type: "null"
+        picks:
+          type: array
+          items:
+            $ref: "#/components/schemas/BookThumb"
+        negatives:
+          type: array
+          items:
+            $ref: "#/components/schemas/BookThumb"
+        hasSignals:
+          type: boolean
+        signalCount:
+          type: number
+        summaryText:
+          type: string
+          description: Collapsed summary, e.g. "Funny mysteries - 2 Filter books"
+
+    SessionState:
+      type: object
+      required:
+        - sessionId
+        - modeId
+        - modeLabel
+        - gradeLabel
+        - pickCount
+        - cartCount
+        - negativeCount
+        - shaping
+        - rankingVersion
+      properties:
+        sessionId:
+          type: string
+        modeId:
+          type: string
+        modeLabel:
+          type: string
+        gradeLabel:
+          type: string
+        query:
+          type: ["string", "null"]
+        pickCount:
+          type: number
+        cartCount:
+          type: number
+        negativeCount:
+          type: number
+        pickIds:
+          type: array
+          items:
+            type: string
+        cartIds:
+          type: array
+          items:
+            type: string
+        negativeIds:
+          type: array
+          items:
+            type: string
+        pivotId:
+          type: ["string", "null"]
+        shaping:
+          $ref: "#/components/schemas/ShapingState"
+        rankingVersion:
+          type: number
+
+    FilterInput:
+      type: object
+      required: [queryText, pivotWorkId]
+      properties:
+        queryText:
+          type: string
+          maxLength: 2000
+          description: Empty or whitespace clears only the direction.
+        pivotWorkId:
+          type: ["string", "null"]
+          description: Catalog book ID. Null clears only the example.
+
+    DiscoverResponse:
+      type: object
+      required:
+        - session
+        - heading
+        - results
+        - resultCount
+        - totalAvailable
+        - hasMore
+        - shaping
+        - rankingVersion
+        - personalized
+        - relaxed
+      properties:
+        session:
+          $ref: "#/components/schemas/SessionState"
+        heading:
+          type: string
+        subheading:
+          type: ["string", "null"]
+        notice:
+          type: ["string", "null"]
+          description: Inline cause confirmation, e.g. "Results updated from Johnny's Filter"
+        announcement:
+          type: ["string", "null"]
+          description: Concise live-region text for assistive technology
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/RankedBook"
+        resultCount:
+          type: number
+        totalAvailable:
+          type: number
+        hasMore:
+          type: boolean
+        personalized:
+          type: boolean
+        relaxed:
+          type: boolean
+          description: True when no exact match existed and nearby options are shown
+        relaxedNote:
+          type: ["string", "null"]
+        shaping:
+          $ref: "#/components/schemas/ShapingState"
+        rankingVersion:
+          type: number
+        interpretation:
+          oneOf:
+            - $ref: "#/components/schemas/QueryInterpretation"
+            - type: "null"
+
+    QueryInterpretation:
+      type: object
+      required: [themes, formats, reduce, terms, source]
+      properties:
+        themes:
+          type: array
+          items:
+            type: string
+        formats:
+          type: array
+          items:
+            type: string
+        reduce:
+          type: array
+          items:
+            type: string
+        terms:
+          type: array
+          items:
+            type: string
+        seriesHint:
+          type: ["string", "null"]
+        source:
+          type: string
+          description: curated | lexical | model
+
+    TypeaheadItem:
+      type: object
+      required: [id, text, kind]
+      properties:
+        id:
+          type: string
+        text:
+          type: string
+        kind:
+          type: string
+          description: search | book | author | series | subject
+        secondaryLabel:
+          type: ["string", "null"]
+        bookId:
+          type: ["string", "null"]
+        query:
+          type: ["string", "null"]
+
+    TypeaheadGroup:
+      type: object
+      required: [label, kind, items]
+      properties:
+        label:
+          type: string
+        kind:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/TypeaheadItem"
+
+    TypeaheadResponse:
+      type: object
+      required: [query, groups, totalCount]
+      properties:
+        query:
+          type: string
+        groups:
+          type: array
+          items:
+            $ref: "#/components/schemas/TypeaheadGroup"
+        totalCount:
+          type: number
+
+    PicksView:
+      type: object
+      required: [items, count]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/BookSummary"
+        count:
+          type: number
+
+    CartLine:
+      type: object
+      required: [book, quantity, lineTotal]
+      properties:
+        book:
+          $ref: "#/components/schemas/BookSummary"
+        quantity:
+          type: number
+        lineTotal:
+          type: number
+
+    CartView:
+      type: object
+      required: [items, itemCount, subtotal, currency]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CartLine"
+        itemCount:
+          type: number
+        subtotal:
+          type: number
+        currency:
+          type: string
+
+    CheckoutResult:
+      type: object
+      required: [reference, itemCount, subtotal, currency, demo, message]
+      properties:
+        reference:
+          type: string
+        itemCount:
+          type: number
+        subtotal:
+          type: number
+        currency:
+          type: string
+        demo:
+          type: boolean
+        message:
+          type: string
+
+    QueryInput:
+      type: object
+      required: [text]
+      properties:
+        text:
+          type: string
+          minLength: 1
+        promptId:
+          type: string
+        source:
+          type: string
+          description: prompt | freetext | typeahead
+
+    PickInput:
+      type: object
+      required: [bookId]
+      properties:
+        bookId:
+          type: string
+        source:
+          type: string
+
+    PivotInput:
+      type: object
+      required: [bookId]
+      properties:
+        bookId:
+          type: string
+
+    NegativeInput:
+      type: object
+      required: [bookId]
+      properties:
+        bookId:
+          type: string
+
+    CartInput:
+      type: object
+      required: [bookId]
+      properties:
+        bookId:
+          type: string
+        quantity:
+          type: number
+          minimum: 1
+          default: 1
+
+    CartUpdate:
+      type: object
+      required: [quantity]
+      properties:
+        quantity:
+          type: number
+          minimum: 0
+
+    EventInput:
+      type: object
+      required: [sessionId, name]
+      properties:
+        sessionId:
+          type: string
+        name:
+          type: string
+        bookId:
+          type: string
+        query:
+          type: string
+        source:
+          type: string
+
+    EventAck:
+      type: object
+      required: [ok]
+      properties:
+        ok:
+          type: boolean

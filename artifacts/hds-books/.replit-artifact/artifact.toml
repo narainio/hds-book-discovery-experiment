@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "HDS Kids Books Discovery"
+description = "A mobile-first book discovery prototype that helps a parent find books for Johnny, age 10, from a catalog of ~2,400 recent grade 4-5 titles. The defining experience is an editable discovery loop: the parent gives the catalog a direction in plain language, collects promising books into Johnny's Picks, pivots from a single book, or marks explicit negatives -- and can always inspect and correct every signal shaping the results. Johnny's Picks (discovery) and Cart (purchase) are deliberately separate. Built for an HDS stakeholder demo."
+version = "1.0.0"
+id = "artifacts/hds-books"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23965
+
+[services.development]
+run = "pnpm --filter @workspace/hds-books run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/hds-books", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/hds-books/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23965"
+BASE_PATH = "/"
