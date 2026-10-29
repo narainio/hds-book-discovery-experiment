@@ -1,74 +1,85 @@
-import { useEffect } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { RotateCw } from 'lucide-react';
-import { useListPrompts, useGetCatalogStats } from '@workspace/api-client-react';
-import { useSession } from '@/hooks/use-session';
+import { useGetCatalogStats } from '@workspace/api-client-react';
 import { useYourFilter, focusYourFilter } from '@/hooks/use-your-filter';
+import { useWorkingContext } from '@/hooks/use-working-context';
 import { YourFilter } from '@/components/your-filter';
 import { BookCard } from '@/components/book-card';
-import { filterKind, resultsHeading } from '@/lib/filter-controller';
+import { resultsHeading } from '@/lib/filter-controller';
+import { catalogScope, resultsCountText } from '@/lib/results-copy';
 
 const GRID = 'grid grid-cols-1 min-[420px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-3 gap-y-8 md:gap-x-5 md:gap-y-10';
 
 export default function Discover() {
-  const { session } = useSession();
   const { view, status, pending, error, more, controller } = useYourFilter();
-  const { data: prompts } = useListPrompts();
+  const { store, committed } = useWorkingContext();
   const { data: stats } = useGetCatalogStats();
+  const restored = useRef(false);
 
   useEffect(() => {
     if (window.location.hash === '#your-filter') focusYourFilter();
   }, []);
 
+  useEffect(() => { store?.markStarted(); }, [store, committed]);
+
+  // Restore the browsing position for PDP Back, browser Back and Continue
+  // discovering. A newly started context records position 0.
+  useLayoutEffect(() => {
+    if (restored.current || !view || !store) return;
+    restored.current = true;
+    const snapshot = store.getSnapshot();
+    const y = snapshot.proposal?.replace ? 0 : snapshot.committed?.scrollY ?? 0;
+    window.scrollTo(0, y);
+  }, [view, store]);
+
+  useEffect(() => {
+    if (!store) return;
+    let frame = 0;
+    const onScroll = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        if (restored.current) store.rememberScroll(window.scrollY);
+      });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (frame) cancelAnimationFrame(frame);
+      store.persist();
+    };
+  }, [store]);
+
   const discover = view?.discover ?? null;
   const filter = view?.filter ?? null;
   const isPending = !!pending;
-  const blocked = error?.kind === 'unsynced';
+  // A new context (Home intention, Browse all, Open Mode, Start over) shows
+  // reserved skeletons instead of the previous context's results.
+  const finding = !!pending?.clearNegatives;
+  const scope = catalogScope(stats?.gradeLabel);
 
   return (
     <div className="flex flex-col w-full">
-      <section className="px-4 md:px-8 pt-8 pb-6 bg-secondary/10 border-b border-border">
-        <div className="max-w-[1440px] mx-auto w-full">
-          <h1 className="text-role-display text-foreground mb-3">Find a book Johnny will enjoy</h1>
-          <p className="text-role-body-large text-muted-foreground max-w-2xl">
-            Start with words or a book, or browse books selected for{' '}
-            {(session?.gradeLabel ?? 'age 10 \u00b7 grades 4\u20135').replace(' \u00b7 ', ' and ')}.
-          </p>
-          {prompts && prompts.length > 0 && (
-            <div className="mt-4 flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0" aria-label="Suggested directions">
-              {prompts.map((prompt) => (
-                <button
-                  key={prompt.id}
-                  type="button"
-                  disabled={blocked}
-                  onClick={() => controller.setWords(prompt.query, prompt.id)}
-                  data-testid={`button-prompt-${prompt.id}`}
-                  className="shrink-0 min-h-11 px-4 py-2 bg-card border border-border hover:border-teal hover:text-teal rounded-full text-role-ui text-muted-foreground transition-colors whitespace-nowrap shadow-sm disabled:opacity-50"
-                >
-                  {prompt.label}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-
-      <div className="px-4 md:px-8 py-8 md:py-10 max-w-[1440px] mx-auto w-full lg:grid lg:grid-cols-[320px_minmax(0,1fr)] lg:gap-8">
-        <aside className="mb-8 sticky top-[var(--top-navigation-height,100px)] z-40 bg-background lg:static lg:z-auto lg:mb-0">
-          <div className="max-h-[calc(65dvh-var(--top-navigation-height,100px))] overflow-y-auto overscroll-contain lg:max-h-none lg:overflow-visible lg:sticky lg:top-[96px]">
-            <YourFilter />
-          </div>
-        </aside>
-
-        <section aria-labelledby="results-heading" aria-busy={isPending || status === 'loading'}>
+      <h1 tabIndex={-1} className="sr-only">Discover books</h1>
+      <div className="px-4 md:px-8 max-w-[1440px] mx-auto w-full">
+        <YourFilter />
+        <section className="pt-4 md:pt-6" aria-labelledby="results-heading" aria-busy={isPending || status === 'loading'}>
           <div className="mb-4">
-            <h2 id="results-heading" className="text-role-section-title text-foreground mb-1" data-testid="text-results-heading">
-              {resultsHeading(filter)}
+            <h2 id="results-heading" className="text-role-subsection-title text-foreground mb-1" data-testid="text-results-heading">
+              {finding ? 'Finding books…' : resultsHeading(filter)}
             </h2>
-            {discover?.subheading && <p className="text-role-metadata text-muted-foreground">{discover.subheading}</p>}
-            {filterKind(filter) === 'empty' && stats && !discover?.subheading && (
-              <p className="text-role-metadata text-muted-foreground">About {stats.totalBooks.toLocaleString()} books for this mode</p>
+            {!finding && discover && discover.results.length > 0 && (
+              <p className="text-role-metadata text-muted-foreground" data-testid="text-results-count">
+                {resultsCountText(discover.results.length, discover.totalAvailable)}
+                {scope && <span data-testid="text-catalog-scope"> · {scope}</span>}
+              </p>
             )}
-            {discover?.relaxed && discover.relaxedNote && (
+            {!finding && discover && discover.results.length > 0 && !filter?.book && (
+              <p className="text-role-small text-muted-foreground mt-1" data-testid="text-add-book-hint">
+                Add a book to your Filter to shape what you see next.
+              </p>
+            )}
+            {!finding && discover?.relaxed && discover.relaxedNote && (
               <p className="text-role-metadata text-muted-foreground mt-1">{discover.relaxedNote}</p>
             )}
           </div>
@@ -82,8 +93,8 @@ export default function Discover() {
                 <RotateCw className="w-4 h-4" aria-hidden="true" /> Retry
               </button>
             </div>
-          ) : !discover ? (
-            <div className={GRID}>
+          ) : !discover || finding ? (
+            <div className={GRID} data-testid="grid-skeleton">
               {[...Array(8)].map((_, i) => (
                 <div key={i} className="flex flex-col animate-pulse">
                   <div className="aspect-[2/3] bg-muted rounded-md mb-3" />
@@ -96,7 +107,7 @@ export default function Discover() {
           ) : discover.results.length === 0 ? (
             <div className="text-center py-20 border-2 border-dashed border-border rounded-xl">
               <h3 className="text-role-subsection-title text-foreground mb-2">We couldn’t find an exact match</h3>
-              <p className="text-muted-foreground">Try changing your direction or removing the book in Your Filter.</p>
+              <p className="text-muted-foreground">Try editing your Filter or removing the book from it.</p>
             </div>
           ) : (
             <div className={`${GRID} transition-opacity duration-200 ${isPending ? 'opacity-60' : 'opacity-100'}`} data-testid="grid-results">
@@ -106,7 +117,7 @@ export default function Discover() {
             </div>
           )}
 
-          {discover?.hasMore && discover.results.length > 0 && (
+          {!finding && discover?.hasMore && discover.results.length > 0 && (
             <div className="mt-12 flex flex-col items-center gap-3">
               {more === 'error' && (
                 <p role="alert" className="text-role-small text-foreground" data-testid="text-more-error">

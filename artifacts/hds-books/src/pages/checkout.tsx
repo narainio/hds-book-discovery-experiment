@@ -74,7 +74,7 @@ export default function Checkout() {
             Demo: No payment was collected.
           </div>
 
-          <Link href="/" className="inline-flex items-center justify-center px-8 py-3.5 bg-teal text-teal-foreground font-semibold rounded-lg hover:bg-teal-hover transition-colors">
+          <Link href="/discover" className="inline-flex items-center justify-center px-8 py-3.5 bg-teal text-teal-foreground font-semibold rounded-lg hover:bg-teal-hover transition-colors">
             Return to Discovery
           </Link>
         </div>
@@ -86,7 +86,7 @@ export default function Checkout() {
     return (
       <div className="w-full max-w-2xl mx-auto p-8 text-center mt-12">
         <h2 className="text-role-section-title mb-4">Cart is empty</h2>
-        <Link href="/" className="text-teal hover:underline font-medium">Return to discovery</Link>
+        <Link href="/discover" className="text-teal hover:underline font-medium">Return to discovery</Link>
       </div>
     );
   }

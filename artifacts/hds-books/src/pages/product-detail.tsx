@@ -88,7 +88,7 @@ export default function ProductDetail() {
     return (
       <div className="p-8 text-center mt-20">
         <h2 className="text-2xl font-serif font-semibold text-foreground mb-4">Book not found</h2>
-        <Link href="/" className="text-teal hover:underline font-medium">Return to discovery</Link>
+        <Link href="/discover" className="text-teal hover:underline font-medium">Return to discovery</Link>
       </div>
     );
   }
@@ -96,7 +96,7 @@ export default function ProductDetail() {
   const handleUseExample = () => {
     if (!book || isExample || filterBlocked) return;
     filterController.setBook({ id: book.id, title: book.title, coverImageUrl: book.coverImageUrl ?? null });
-    setLoc('/');
+    setLoc('/discover');
   };
 
   const handleFewerLikeThis = () => {
@@ -106,7 +106,7 @@ export default function ProductDetail() {
         setSessionState(queryClient, sessionId, nextSession);
         // Re-read committed results through the serialized Filter controller.
         filterController.refresh();
-        setLoc('/');
+        setLoc('/discover');
       }
     });
   };
@@ -132,7 +132,7 @@ export default function ProductDetail() {
 
       {/* Mobile Sticky Top Bar */}
       <div className="md:hidden sticky top-[56px] z-30 bg-card border-b border-border flex items-center justify-between px-4 h-14">
-        <Link href="/" className="flex items-center gap-2 text-foreground font-medium hover:text-teal">
+        <Link href="/discover" className="flex items-center gap-2 text-foreground font-medium hover:text-teal">
           <ArrowLeft className="w-5 h-5" /> Back
         </Link>
         <button
@@ -164,7 +164,7 @@ export default function ProductDetail() {
           </div>
           
           <div className="hidden md:flex w-full max-w-[420px] mt-6 justify-between items-center text-sm font-medium">
-            <Link href="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
+            <Link href="/discover" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
               <ArrowLeft className="w-4 h-4" /> Back to discovery
             </Link>
             <button
@@ -265,10 +265,10 @@ export default function ProductDetail() {
               }`}
             >
               {isExample ? <Check className="w-5 h-5" aria-hidden="true" /> : <Sparkles className="w-5 h-5" aria-hidden="true" />}
-              {isExample ? 'In Filter' : isPendingExample ? 'Adding...' : 'Use to shape results'}
+              {isExample ? 'In Filter' : isPendingExample ? 'Adding...' : filterView?.filter.book ? 'Use instead' : 'Add to Filter'}
             </button>
             <p className="text-role-small text-muted-foreground">
-              {isExample ? 'Your example · not a required match. Remove it from Your Filter at any time.' : 'Uses this book as an example. It is not saved or added to your cart, and replaces any previous example.'}
+              {isExample ? 'In your Filter · not a required match. Remove it from your Filter on the results page at any time.' : 'Adds this book to your Filter to shape what you see next. It isn’t added to your Cart, and replaces any book already in your Filter.'}
             </p>
 
             <div className="flex items-center justify-end gap-2 mt-2">

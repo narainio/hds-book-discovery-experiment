@@ -17,4 +17,6 @@ export interface FilterInput {
      * @nullable
      */
   pivotWorkId: string | null;
+  /** Optional. When true, explicit "fewer like this" signals are cleared in the same transaction (context replacement). Cart is never affected. Omitted or false keeps negatives. */
+  clearNegatives?: boolean;
 }

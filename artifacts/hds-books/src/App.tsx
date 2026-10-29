@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/not-found';
 import Discover from '@/pages/discover';
+import Home from '@/pages/home';
 import ProductDetail from '@/pages/product-detail';
 import Picks from '@/pages/picks';
 import Cart from '@/pages/cart';
@@ -12,6 +13,7 @@ import Checkout from '@/pages/checkout';
 import Layout from '@/components/layout';
 import { SessionProvider } from '@/hooks/use-session';
 import { YourFilterProvider } from '@/hooks/use-your-filter';
+import { WorkingContextProvider } from '@/hooks/use-working-context';
 
 import {
   Route,
@@ -27,7 +29,8 @@ function Router() {
     <Layout>
       <RoutedErrorBoundary>
         <Switch>
-          <Route path="/" component={Discover} />
+          <Route path="/" component={Home} />
+          <Route path="/discover" component={Discover} />
           <Route path="/book/:id" component={ProductDetail} />
           <Route path="/picks" component={Picks} />
           <Route path="/cart" component={Cart} />
@@ -50,9 +53,11 @@ function App() {
       <TooltipProvider>
         <SessionProvider>
           <YourFilterProvider>
-            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
-              <Router />
-            </WouterRouter>
+            <WorkingContextProvider>
+              <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
+                <Router />
+              </WouterRouter>
+            </WorkingContextProvider>
           </YourFilterProvider>
           <Toaster />
         </SessionProvider>

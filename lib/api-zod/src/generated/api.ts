@@ -220,7 +220,8 @@ export const setFilterBodyQueryTextMax = 2000;
 
 export const SetFilterBody = zod.object({
   "queryText": zod.string().max(setFilterBodyQueryTextMax).describe('Empty or whitespace clears only the direction.'),
-  "pivotWorkId": zod.string().nullable().describe('Catalog book ID. Null clears only the example.')
+  "pivotWorkId": zod.string().nullable().describe('Catalog book ID. Null clears only the example.'),
+  "clearNegatives": zod.boolean().optional().describe('Optional. When true, explicit \"fewer like this\" signals are cleared in the same transaction (context replacement). Cart is never affected. Omitted or false keeps negatives.')
 })
 
 export const SetFilterResponse = zod.object({
@@ -323,6 +324,33 @@ export const SetFilterResponse = zod.object({
   "seriesHint": zod.string().nullish(),
   "source": zod.string().describe('curated | lexical | model')
 }),zod.null()]).optional()
+})
+
+
+/**
+ * Never writes and never calls a model. Classifies the text as supported, unsupported category, mixed, uninterpretable, or catalog mismatch, and lists details that will not be applied.
+ * @summary Read-only, deterministic scope assessment of a written intention
+ */
+export const assessIntentionBodyTextMax = 2000;
+
+
+
+export const AssessIntentionBody = zod.object({
+  "text": zod.string().max(assessIntentionBodyTextMax)
+})
+
+export const AssessIntentionResponse = zod.object({
+  "text": zod.string(),
+  "status": zod.enum(['empty', 'supported', 'unsupported', 'mixed', 'uninterpretable', 'mismatch']),
+  "unsupportedCategories": zod.array(zod.object({
+  "key": zod.string(),
+  "label": zod.string().describe('Sentence-case singular, e.g. \"Grocery\"'),
+  "plural": zod.string().describe('Plural noun, e.g. \"toys\"')
+})),
+  "supportedText": zod.string().nullable().describe('The text with unsupported category requests removed'),
+  "mismatch": zod.string().nullable().describe('Age or grade phrase outside the catalog\'s grades 4-5 labeling'),
+  "caveats": zod.array(zod.string()).describe('Grounded notes about details that are not enforced'),
+  "actionable": zod.boolean()
 })
 
 

@@ -2,7 +2,7 @@ import type { Session } from "@workspace/db";
 import { interpret } from "../domain/interpreter";
 import { interpretWithLlm, isLlmConfigured } from "../domain/llm-interpreter";
 
-export type FilterInput = { queryText: string; pivotWorkId: string | null };
+export type FilterInput = { queryText: string; pivotWorkId: string | null; clearNegatives?: boolean };
 
 export async function prepareFilterSession(current: Session, input: FilterInput): Promise<Session> {
   const query = input.queryText.trim() || null;
@@ -22,6 +22,15 @@ export async function prepareFilterSession(current: Session, input: FilterInput)
     rankingVersion: current.rankingVersion + (changed ? 1 : 0),
     updatedAt: changed ? new Date() : current.updatedAt,
   };
+}
+
+/**
+ * Clearing negatives changes ranking inputs, so the version must advance even
+ * when words and example are unchanged (results are cached per version).
+ */
+export function withNegativesCleared(candidate: Session, current: Session, clearing: boolean): Session {
+  if (!clearing || candidate.rankingVersion !== current.rankingVersion) return candidate;
+  return { ...candidate, rankingVersion: current.rankingVersion + 1, updatedAt: new Date() };
 }
 
 /** Called inside the row-locked DB transaction; a failed computation never writes. */

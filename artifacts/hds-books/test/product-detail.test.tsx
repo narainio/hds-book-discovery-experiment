@@ -171,14 +171,14 @@ test("What it explores remains distinct from deterministic suitability copy", ()
   assert.match(markup, /A mystery centered on friendship/);
 });
 
-test("PDP offers the single example action, never legacy Filter picks", () => {
+test("PDP offers the single Add to Filter action, never legacy Picks", () => {
   activeBookId = null;
   let markup = renderToStaticMarkup(<ProductDetail />);
-  assert.match(markup, /Use to shape results/);
-  assert.doesNotMatch(markup, /Add to Filter|Remove from Filter|Show me more like this/);
+  assert.match(markup, /Add to Filter/);
+  assert.doesNotMatch(markup, /Use as an example|Remove from Filter|Show me more like this|Picks/);
   activeBookId = book.id;
   markup = renderToStaticMarkup(<ProductDetail />);
-  assert.match(markup, /In Filter/);
+  assert.match(markup, />In Filter</);
   assert.match(markup, /aria-pressed="true"/);
   activeBookId = null;
 });

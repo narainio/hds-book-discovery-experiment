@@ -53,12 +53,13 @@ test("cart items can still be removed if their price becomes unavailable", () =>
   price = 15.99;
 });
 
-test("book card example action is independent of Cart membership", () => {
+test("book card Filter action is independent of Cart membership and states In Filter", () => {
   for (const example of [false, true]) {
     activeId = example ? "book" : null;
     const html = renderToStaticMarkup(<BookCard book={book() as never} />);
-    assert.match(html, example ? /In Filter/ : /Use to shape results/);
-    assert.doesNotMatch(html, /Add to Filter|Remove from Filter|cart/i);
+    assert.match(html, example ? />In Filter</ : />Add to Filter</);
+    if (example) assert.match(html, /aria-label="A long book title is in your Filter"/);
+    assert.doesNotMatch(html.replace(/<[^>]+>/g, " "), /example|Remove from Filter|cart/i);
   }
   activeId = null;
   assert.equal(setBookCalls, 0, "rendering never selects an example");

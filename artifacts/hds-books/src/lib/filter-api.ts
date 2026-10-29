@@ -22,6 +22,7 @@ export function createFilterAdapter(sessionId: string, onResult: (r: FilterResul
     commit: async (desired: FilterInput) => toResult(await setFilter(sessionId, {
       queryText: (normalizeWords(desired.words) ?? '').slice(0, MAX_WORDS_LENGTH),
       pivotWorkId: desired.book?.id ?? null,
+      ...(desired.clearNegatives ? { clearNegatives: true } : {}),
     })),
     onResult,
   };
