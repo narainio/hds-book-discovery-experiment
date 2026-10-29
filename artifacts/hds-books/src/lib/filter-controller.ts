@@ -13,6 +13,12 @@ export interface FilterInput {
   words: string | null;
   book: BookThumb | null;
   promptId?: string;
+  /**
+   * Context replacement (new Home intention, Browse all books, Open Mode,
+   * Start over): also clear explicit negatives in the same transaction. Not
+   * part of identity; Cart is never affected.
+   */
+  clearNegatives?: boolean;
 }
 
 export interface FilterResult {
@@ -46,6 +52,8 @@ export interface FilterSnapshot {
   draft: string;
   /** "Show more books" pagination for the committed view. */
   more: 'idle' | 'loading' | 'error';
+  /** Unsent words set aside when a suggestion was staged for review. */
+  restorableDraft: string | null;
 }
 
 export interface FilterAdapter {
@@ -91,13 +99,9 @@ export function filterKind(filter: FilterInput | null): 'empty' | 'book' | 'word
   return 'empty';
 }
 
+/** Stable headings: broad browsing vs. any active textual or product signal. */
 export function resultsHeading(filter: FilterInput | null): string {
-  switch (filterKind(filter)) {
-    case 'both': return 'Books shaped by your direction and example';
-    case 'book': return 'Books shaped by your example';
-    case 'words': return 'Books shaped by your direction';
-    default: return 'Books to explore';
-  }
+  return filterKind(filter) === 'empty' ? 'Books to explore' : 'Recommended next';
 }
 
 function errorMessage(error: unknown): string {
@@ -128,12 +132,15 @@ export class FilterController {
     announcement: '',
     draft: '',
     more: 'idle',
+    restorableDraft: null,
   };
   private needsRefresh = false;
   private listeners = new Set<Listener>();
   private target: FilterInput | null = null;
   private running = false;
   private loadToken = 0;
+  private draftTouched = false;
+  private stagedSuggestion: { words: string; promptId?: string } | null = null;
 
   constructor(private adapter: FilterAdapter) {}
 
@@ -168,7 +175,7 @@ export class FilterController {
       const filter = filterFromResult(result);
       this.set({
         status: 'ready',
-        draft: this.snapshot.draft || filter.words || '',
+        draft: this.draftTouched ? this.snapshot.draft : filter.words || '',
       });
     } catch (error) {
       if (token !== this.loadToken) return;
@@ -228,17 +235,59 @@ export class FilterController {
   }
 
   setDraft(draft: string) {
+    this.draftTouched = true;
+    if (normalizeWords(draft) !== this.stagedSuggestion?.words) this.stagedSuggestion = null;
     this.set({ draft });
   }
 
+  /** True when the draft differs from the words the next change builds on. */
+  get hasUnsentDraft(): boolean {
+    const draft = normalizeWords(this.snapshot.draft);
+    return draft !== normalizeWords(this.base.words);
+  }
+
+  /**
+   * Apply a starter suggestion, unless the shopper has unsent words: then the
+   * suggestion is placed in the draft for review and the prior text is kept
+   * so it can be restored. Returns whether the suggestion was applied.
+   */
+  applySuggestion(query: string, promptId?: string): 'applied' | 'staged' {
+    if (this.hasUnsentDraft && normalizeWords(this.snapshot.draft) !== normalizeWords(query)) {
+      this.draftTouched = true;
+      this.stagedSuggestion = { words: normalizeWords(query)!, promptId };
+      this.set({
+        restorableDraft: this.snapshot.restorableDraft ?? this.snapshot.draft,
+        draft: query,
+      });
+      return 'staged';
+    }
+    this.setWords(query, promptId);
+    return 'applied';
+  }
+
+  restoreDraft() {
+    const previous = this.snapshot.restorableDraft;
+    if (previous === null) return;
+    this.stagedSuggestion = null;
+    this.draftTouched = true;
+    this.set({ draft: previous, restorableDraft: null });
+  }
+
   setWords(words: string | null, promptId?: string) {
-    const next = { ...this.base, words: normalizeWords(words), promptId };
+    const normalized = normalizeWords(words);
+    const stagedId = normalized === this.stagedSuggestion?.words ? this.stagedSuggestion?.promptId : undefined;
+    const next = { ...this.base, words: normalized, promptId: promptId ?? stagedId };
+    this.stagedSuggestion = null;
+    this.draftTouched = true;
+    this.set({ restorableDraft: null });
     if (next.words) this.set({ draft: next.words });
     this.request(next);
   }
 
   clearWords() {
-    this.set({ draft: '' });
+    this.stagedSuggestion = null;
+    this.draftTouched = true;
+    this.set({ draft: '', restorableDraft: null });
     this.request({ ...this.base, words: null, promptId: undefined });
   }
 
@@ -246,6 +295,18 @@ export class FilterController {
   setBook(book: BookThumb) {
     if (this.base.book?.id === book.id) return;
     this.request({ ...this.base, book, promptId: undefined });
+  }
+
+  /**
+   * Replace the whole working context atomically: words, example and explicit
+   * negatives. Serialized like every other change, so a newer request always
+   * supersedes an older one and failures keep the last working view.
+   */
+  replace(next: { words: string | null; book: BookThumb | null }) {
+    this.stagedSuggestion = null;
+    this.draftTouched = true;
+    this.set({ draft: normalizeWords(next.words) ?? '', restorableDraft: null });
+    this.request({ words: normalizeWords(next.words), book: next.book, clearNegatives: true }, true);
   }
 
   removeBook() {
@@ -274,7 +335,7 @@ export class FilterController {
   private request(next: FilterInput, force = false) {
     if (this.isBlocked && !force) return;
     const visible = this.snapshot.view?.filter ?? null;
-    if (!this.running && sameFilter(next, visible) && !next.promptId) {
+    if (!this.running && sameFilter(next, visible) && !next.promptId && !next.clearNegatives) {
       this.target = null;
       this.set({ pending: null, error: null });
       return;

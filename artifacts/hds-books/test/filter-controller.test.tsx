@@ -35,6 +35,35 @@ function harness(server: { words: string | null; book: typeof bookA | null } = {
 const tick = async () => { for (let i = 0; i < 5; i++) await new Promise((r) => setTimeout(r, 0)); };
 const ok = (call: Call) => call.d.resolve(result(call.desired.words, call.desired.book));
 
+test("staged unchanged suggestions retain their curated interpretation metadata", async () => {
+  const { c, calls } = harness();
+  await c.load();
+  c.setDraft("my unsent idea");
+  assert.equal(c.applySuggestion("Funny mysteries", "funny"), "staged");
+  c.setWords(c.getSnapshot().draft);
+  assert.equal(calls[0].desired.promptId, "funny");
+  ok(calls[0]); await tick();
+  c.setDraft("another idea");
+  c.applySuggestion("Animal stories", "animals");
+  c.setDraft("Animal stories in space");
+  c.setWords(c.getSnapshot().draft);
+  assert.equal(calls[1].desired.promptId, undefined);
+  ok(calls[1]); await tick();
+});
+
+test("an empty unsent edit survives refresh and can be restored after a suggestion", async () => {
+  const { c, calls } = harness({ words: "Applied words", book: bookA });
+  await c.load();
+  c.setDraft("");
+  await c.load();
+  assert.equal(c.getSnapshot().draft, "");
+  assert.equal(c.applySuggestion("Funny mysteries", "funny"), "staged");
+  assert.equal(calls.length, 0);
+  c.restoreDraft();
+  assert.equal(c.getSnapshot().draft, "");
+  assert.equal(c.getSnapshot().view?.filter.words, "Applied words");
+});
+
 test("full lifecycle: book, words, independent removals, back to start", async () => {
   const { c, calls } = harness();
   await c.load();
@@ -44,7 +73,7 @@ test("full lifecycle: book, words, independent removals, back to start", async (
   assert.deepEqual(calls[1].desired.book, bookA);
   c.removeBook(); ok(calls[2]); await tick();
   assert.equal(calls[2].desired.words, "Funny mysteries, not too scary");
-  assert.equal(resultsHeading(c.getSnapshot().view!.filter), "Books shaped by your direction");
+  assert.equal(resultsHeading(c.getSnapshot().view!.filter), "Recommended next");
   c.setBook(bookA); ok(calls[3]); await tick();
   c.clearWords(); ok(calls[4]); await tick();
   assert.deepEqual(calls[4].desired, { words: null, book: bookA, promptId: undefined });
@@ -78,7 +107,7 @@ test("rapid changes serialize and never show stale results as current", async ()
   assert.deepEqual([calls[1].desired.words, calls[1].desired.book!.id], ["dragons", "b"]);
   ok(calls[1]); await tick();
   assert.equal(c.getSnapshot().pending, null);
-  assert.match(c.getSnapshot().announcement, /direction and example/);
+  assert.match(c.getSnapshot().announcement, /Recommended next/);
 });
 
 test("rejected update keeps previous view and draft; retry succeeds", async () => {
@@ -183,4 +212,38 @@ test("refresh after a negative waits for in-flight filter change", async () => {
   assert.equal(reads, 1, "not read while change in flight");
   calls[0].resolve(result(null, null)); await tick();
   assert.equal(reads, 2, "re-read after change settled");
+});
+
+test("suggestion applies directly without a draft and preserves the example", async () => {
+  const { c, calls } = harness({ words: null, book: bookA });
+  await c.load();
+  assert.equal(c.applySuggestion("funny mysteries", "p1"), "applied");
+  assert.deepEqual(calls[0].desired, { words: "funny mysteries", book: bookA, promptId: "p1" });
+});
+
+test("suggestion is staged when unsent words exist; prior draft restorable", async () => {
+  const { c, calls } = harness({ words: "dragons", book: bookA });
+  await c.load();
+  c.setDraft("space pirates");
+  assert.equal(c.applySuggestion("funny mysteries", "p1"), "staged");
+  assert.equal(calls.length, 0, "nothing applied");
+  assert.equal(c.getSnapshot().draft, "funny mysteries");
+  assert.equal(c.getSnapshot().restorableDraft, "space pirates");
+  assert.equal(c.applySuggestion("robots", "p2"), "staged");
+  assert.equal(c.getSnapshot().restorableDraft, "space pirates", "original draft kept across stagings");
+  c.restoreDraft();
+  assert.equal(c.getSnapshot().draft, "space pirates");
+  assert.equal(c.getSnapshot().restorableDraft, null);
+  assert.equal(c.getSnapshot().view!.filter.words, "dragons");
+});
+
+test("book changes never overwrite unsent words", async () => {
+  const { c, calls } = harness({ words: "dragons", book: null });
+  await c.load();
+  c.setDraft("dragons who bake");
+  c.setBook(bookB); ok(calls[0]); await tick();
+  assert.equal(c.getSnapshot().draft, "dragons who bake");
+  assert.equal(calls[0].desired.words, "dragons");
+  c.removeBook(); calls[1].d.reject(new Error("x")); await tick();
+  assert.equal(c.getSnapshot().draft, "dragons who bake");
 });

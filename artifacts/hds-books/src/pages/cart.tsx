@@ -73,7 +73,7 @@ export default function Cart() {
         <div className="text-center py-24 bg-card border border-border rounded-xl">
           <h2 className="text-role-section-title mb-3">Your cart is empty</h2>
           <p className="text-role-body-large text-muted-foreground mb-8">Ready to find some great books?</p>
-          <Link href="/" className="inline-flex items-center justify-center px-6 py-3 bg-coral text-coral-foreground font-semibold rounded-lg hover:bg-coral-hover transition-colors shadow-sm">
+          <Link href="/discover" className="inline-flex items-center justify-center px-6 py-3 bg-coral text-coral-foreground font-semibold rounded-lg hover:bg-coral-hover transition-colors shadow-sm">
             Start shopping
           </Link>
         </div>

@@ -26,7 +26,8 @@ import { interpretWithLlm, isLlmConfigured } from "../domain/llm-interpreter";
 import { rankForSession } from "../domain/ranking-cache";
 import { toBookSummary, shortTitle } from "../domain/serializers";
 import { RANKING } from "../domain/config";
-import { prepareFilterSession, computeThenCommit } from "../services/filter";
+import { prepareFilterSession, computeThenCommit, withNegativesCleared } from "../services/filter";
+import { assessIntention } from "../domain/assessment";
 import {
   createSession,
   findSession,
@@ -374,9 +375,10 @@ router.post("/session/:sessionId/filter", async (req, res) => {
   if (
     !body || typeof body.queryText !== "string" ||
     !(body.pivotWorkId === null || typeof body.pivotWorkId === "string") ||
-    body.queryText.length > 2000
+    body.queryText.length > 2000 ||
+    !(body.clearNegatives === undefined || typeof body.clearNegatives === "boolean")
   ) {
-    res.status(400).json({ error: "queryText (up to 2000 characters) and pivotWorkId (book ID or null) are required" });
+    res.status(400).json({ error: "queryText (up to 2000 characters) and pivotWorkId (book ID or null) are required; clearNegatives must be a boolean when present" });
     return;
   }
   if (body.pivotWorkId !== null && !catalog.byId.has(body.pivotWorkId)) {
@@ -390,11 +392,18 @@ router.post("/session/:sessionId/filter", async (req, res) => {
     const [current] = await tx.select().from(sessionsTable)
       .where(eq(sessionsTable.id, req.params.sessionId)).for("update");
     if (!current) return null;
-    const candidate = await prepareFilterSession(current, body);
-    const signals = await loadSignalIds(current.id, tx);
+    const loaded = await loadSignalIds(current.id, tx);
+    // Context replacement (new intention, Browse all, Open Mode, Start over)
+    // clears explicit negatives in the same transaction; Cart is untouched.
+    const clearing = body.clearNegatives === true && loaded.negativeIds.length > 0;
+    const candidate = withNegativesCleared(await prepareFilterSession(current, body), current, clearing);
+    const signals = clearing ? { ...loaded, negativeIds: [] } : loaded;
     return computeThenCommit(
       () => buildDiscoverResponse(candidate, 0, RANKING.defaultPageSize, signals),
       async () => {
+        if (clearing) {
+          await tx.delete(negativeSignalsTable).where(eq(negativeSignalsTable.sessionId, current.id));
+        }
         await tx.update(sessionsTable).set({
           query: candidate.query,
           queryPromptId: candidate.queryPromptId,
@@ -415,6 +424,20 @@ router.post("/session/:sessionId/filter", async (req, res) => {
   } catch {
     res.status(500).json({ error: "The Filter change was not applied. Please retry." });
   }
+});
+
+/**
+ * Read-only scope assessment of a written intention. Deterministic, never
+ * calls a model, never writes; clients call it before committing a new
+ * context so unsupported requests are never shown as matches.
+ */
+router.post("/intention/assess", (req, res) => {
+  const text = req.body?.text;
+  if (typeof text !== "string" || text.length > 2000) {
+    res.status(400).json({ error: "text (up to 2000 characters) is required" });
+    return;
+  }
+  res.json(assessIntention(text));
 });
 
 router.post("/events", async (req, res) => {

@@ -35,6 +35,8 @@ import type {
   GetDiscoverParams,
   GetTypeaheadParams,
   HealthStatus,
+  IntentionAssessInput,
+  IntentionAssessment,
   NegativeInput,
   PickInput,
   PicksView,
@@ -763,6 +765,78 @@ export const useSetFilter = <TError = ErrorType<ErrorResponse>,
         TContext
       > => {
       return useMutation(getSetFilterMutationOptions(options));
+    }
+
+export const getAssessIntentionUrl = () => {
+
+
+
+
+  return `/api/intention/assess`
+}
+
+/**
+ * Never writes and never calls a model. Classifies the text as supported, unsupported category, mixed, uninterpretable, or catalog mismatch, and lists details that will not be applied.
+ * @summary Read-only, deterministic scope assessment of a written intention
+ */
+export const assessIntention = async (intentionAssessInput: IntentionAssessInput, options?: Parameters<typeof customFetch>[1]): Promise<IntentionAssessment> => {
+
+  return customFetch<IntentionAssessment>(getAssessIntentionUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(intentionAssessInput)
+  }
+);}
+
+
+
+
+
+export const getAssessIntentionMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assessIntention>>, TError,{data: BodyType<IntentionAssessInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof assessIntention>>, TError,{data: BodyType<IntentionAssessInput>}, TContext> => {
+
+const mutationKey = ['assessIntention'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof assessIntention>>, {data: BodyType<IntentionAssessInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  assessIntention(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AssessIntentionMutationResult = NonNullable<Awaited<ReturnType<typeof assessIntention>>>
+    export type AssessIntentionMutationBody = BodyType<IntentionAssessInput>
+    export type AssessIntentionMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Read-only, deterministic scope assessment of a written intention
+ */
+export const useAssessIntention = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assessIntention>>, TError,{data: BodyType<IntentionAssessInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof assessIntention>>,
+        TError,
+        {data: BodyType<IntentionAssessInput>},
+        TContext
+      > => {
+      return useMutation(getAssessIntentionMutationOptions(options));
     }
 
 export const getResetSessionUrl = (sessionId: string,) => {

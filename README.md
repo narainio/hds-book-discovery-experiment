@@ -7,15 +7,36 @@ the original repository and deployment are maintained separately.
 
 ## Current experience
 
-- Describe a direction in words, select one book as an example, or combine both.
+- Start on Home (`/`): describe what you are shopping for, use an example
+  prompt, browse all books, continue the current discovery, or open a saved
+  Mode. Requests outside the books catalog are explained instead of matched.
+- Discovery lives at `/discover`. **Your Filter** shows the current request,
+  what shaped ranking, and what was not applied. **Edit Filter** replaces the
+  text; **Add to your Filter** adds another preference. Both preserve the book
+  signal and negative feedback.
+- Select one book with **Add to Filter**, or combine it with words. Internally
+  this is the single similarity pivot: another selection replaces it rather
+  than accumulating books. Removing it is not “Fewer like this” feedback.
+- **Save as a Mode** (or **Save as a new Mode**) creates a browser-local recipe:
+  request text, added preferences, source context and at most one book ID.
+  Cart, “Fewer like this” and result order are not saved. Opening a Mode copies
+  its recipe; later working changes do not update it automatically.
+- **Clear Filter** resets the working context while preserving saved Modes
+  and Cart. Home suggestions populate the input without submitting. Continue
+  discovering appears for an active Filter or a remembered browsing position.
 - Edit or remove either input independently in **Your Filter**.
 - Filter state and matching results update together, with recoverable errors.
 - Browse paginated recommendations, book details, and a separate demo cart.
-- The Filter sticks beside results on desktop and below navigation on mobile.
+- One responsive Filter ribbon sits above the full-width result grid and
+  collapses while browsing. Counts distinguish loaded books from the server's
+  total ranked candidates; they are not a guaranteed matching total.
 - Optional OpenRouter interpretation falls back to deterministic interpretation.
 - Checkout is a demonstration: it does not collect payments.
 
 The initial public snapshot is tagged `feedback-baseline`.
+The seeded “Books for Johnny” Mode carries age context, not enforced
+personalization. Catalog grades are information about the available feed;
+age, price, length and safety requests are not hard eligibility constraints.
 
 ## Repository layout
 
@@ -94,6 +115,13 @@ After intentionally changing the API specification, regenerate clients with
 `pnpm --filter @workspace/api-spec run codegen`. Integration tests requiring a
 live API/catalog are separate from the unit tests; use a disposable environment.
 
+For an isolated unit-test run without a database, the DB module still requires
+a nonempty URL at import time. With real credentials and API keys removed from
+the test process environment, use a process-only placeholder:
+`DATABASE_URL=postgresql://127.0.0.1:1/unit_test pnpm test`.
+The unit suite uses in-memory fixtures and does not require a listening database.
+Do not use this placeholder to start the app or run the live integration tests.
+
 ## Publishing source changes safely
 
 Public source destination:
@@ -115,7 +143,10 @@ Removed files must be removed from that list deliberately.
 For an Agent-assisted update, request a reviewed source-only snapshot update to
 this repository. Use the GitHub API to create blobs and a complete tree, verify
 its paths and hashes against the export manifest, then create a commit whose
-parent is the current public `main` commit and fast-forward `main` without force.
+parent is the current public `main` commit. With explicit authorization, publish
+that commit on a new feature branch and open a pull request into `main`; do not
+update `main` directly or force-push. After review and separately approved merge,
+tag the merged milestone without moving `feedback-baseline`.
 This also preserves deletions and public history. Do not copy the remix's `.git`
 directory or push its checkpoint branches. No automatic GitHub sync is enabled
 in the remix, and no GitHub push remote is attached to its checkpoint repository.

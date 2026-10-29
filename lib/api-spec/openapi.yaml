@@ -202,6 +202,32 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /intention/assess:
+    post:
+      operationId: assessIntention
+      tags: [discovery]
+      summary: Read-only, deterministic scope assessment of a written intention
+      description: Never writes and never calls a model. Classifies the text as supported, unsupported category, mixed, uninterpretable, or catalog mismatch, and lists details that will not be applied.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IntentionAssessInput"
+      responses:
+        "200":
+          description: Assessment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IntentionAssessment"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /session/{sessionId}/reset:
     post:
       operationId: resetSession
@@ -923,6 +949,57 @@ components:
         pivotWorkId:
           type: ["string", "null"]
           description: Catalog book ID. Null clears only the example.
+        clearNegatives:
+          type: boolean
+          description: Optional. When true, explicit "fewer like this" signals are cleared in the same transaction (context replacement). Cart is never affected. Omitted or false keeps negatives.
+
+    IntentionAssessInput:
+      type: object
+      required: [text]
+      properties:
+        text:
+          type: string
+          maxLength: 2000
+
+    UnsupportedCategory:
+      type: object
+      required: [key, label, plural]
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+          description: Sentence-case singular, e.g. "Grocery"
+        plural:
+          type: string
+          description: Plural noun, e.g. "toys"
+
+    IntentionAssessment:
+      type: object
+      required: [text, status, unsupportedCategories, supportedText, mismatch, caveats, actionable]
+      properties:
+        text:
+          type: string
+        status:
+          type: string
+          enum: [empty, supported, unsupported, mixed, uninterpretable, mismatch]
+        unsupportedCategories:
+          type: array
+          items:
+            $ref: "#/components/schemas/UnsupportedCategory"
+        supportedText:
+          type: ["string", "null"]
+          description: The text with unsupported category requests removed
+        mismatch:
+          type: ["string", "null"]
+          description: Age or grade phrase outside the catalog's grades 4-5 labeling
+        caveats:
+          type: array
+          items:
+            type: string
+          description: Grounded notes about details that are not enforced
+        actionable:
+          type: boolean
 
     DiscoverResponse:
       type: object

@@ -200,6 +200,52 @@ export interface FilterInput {
      * @nullable
      */
   pivotWorkId: string | null;
+  /** Optional. When true, explicit "fewer like this" signals are cleared in the same transaction (context replacement). Cart is never affected. Omitted or false keeps negatives. */
+  clearNegatives?: boolean;
+}
+
+export interface IntentionAssessInput {
+  /** @maxLength 2000 */
+  text: string;
+}
+
+export interface UnsupportedCategory {
+  key: string;
+  /** Sentence-case singular, e.g. "Grocery" */
+  label: string;
+  /** Plural noun, e.g. "toys" */
+  plural: string;
+}
+
+export type IntentionAssessmentStatus = typeof IntentionAssessmentStatus[keyof typeof IntentionAssessmentStatus];
+
+
+export const IntentionAssessmentStatus = {
+  empty: 'empty',
+  supported: 'supported',
+  unsupported: 'unsupported',
+  mixed: 'mixed',
+  uninterpretable: 'uninterpretable',
+  mismatch: 'mismatch',
+} as const;
+
+export interface IntentionAssessment {
+  text: string;
+  status: IntentionAssessmentStatus;
+  unsupportedCategories: UnsupportedCategory[];
+  /**
+     * The text with unsupported category requests removed
+     * @nullable
+     */
+  supportedText: string | null;
+  /**
+     * Age or grade phrase outside the catalog's grades 4-5 labeling
+     * @nullable
+     */
+  mismatch: string | null;
+  /** Grounded notes about details that are not enforced */
+  caveats: string[];
+  actionable: boolean;
 }
 
 export interface QueryInterpretation {

@@ -62,3 +62,47 @@ test("Atomic Filter, explicit negatives, and Cart retain separate semantics and 
     await api(`${sessionPath}/cart/${book.id}`, "DELETE");
   }
 });
+test("Context replacement clears words, example and negatives atomically while keeping Cart", async () => {
+  const initial = await api("/session", "POST", {});
+  const sessionPath = `/session/${initial.sessionId}`;
+  const discoverPath = `/discover?sessionId=${initial.sessionId}`;
+  const baseline = await api(discoverPath);
+  const [cartBook, negativeBook, exampleBook] = baseline.results.map(({ book }) => book);
+  try {
+    await api(`${sessionPath}/cart`, "POST", { bookId: cartBook.id, quantity: 1 });
+    await api(`${sessionPath}/negatives`, "POST", { bookId: negativeBook.id });
+    const shaped = await api(`${sessionPath}/filter`, "POST", { queryText: "Funny graphic novels", pivotWorkId: exampleBook.id });
+    assert.deepEqual(shaped.session.negativeIds, [negativeBook.id]);
+
+    // Edit intention keeps the example and negatives.
+    const edited = await api(`${sessionPath}/filter`, "POST", { queryText: "Animal adventures", pivotWorkId: exampleBook.id });
+    assert.equal(edited.session.pivotId, exampleBook.id);
+    assert.deepEqual(edited.session.negativeIds, [negativeBook.id]);
+
+    // Start over / Browse all books / new Home intention / Open Mode.
+    const replaced = await api(`${sessionPath}/filter`, "POST", { queryText: "", pivotWorkId: null, clearNegatives: true });
+    assert.equal(replaced.session.pivotId, null);
+    assert.equal(replaced.session.shaping.query ?? null, null);
+    assert.deepEqual(replaced.session.negativeIds, []);
+    assert.deepEqual(replaced.session.cartIds, [cartBook.id], "Context replacement must preserve the Cart");
+    assert.deepEqual((await api(discoverPath)).results.map((r) => r.book.id), baseline.results.map((r) => r.book.id),
+      "Browse all books must rank exactly like a fresh session");
+  } finally {
+    await api(`${sessionPath}/filter`, "POST", { queryText: "", pivotWorkId: null, clearNegatives: true });
+    await api(`${sessionPath}/cart/${cartBook.id}`, "DELETE");
+  }
+});
+
+test("Intention assessment is read-only and classifies scope", async () => {
+  const initial = await api("/session", "POST", {});
+  const before = await api(`/session/${initial.sessionId}`);
+  const grocery = await api("/intention/assess", "POST", { text: "groceries for the week" });
+  assert.equal(grocery.status, "unsupported");
+  const mixed = await api("/intention/assess", "POST", { text: "books and toys for Johnny" });
+  assert.equal(mixed.status, "mixed");
+  assert.equal(mixed.supportedText, "books for Johnny");
+  assert.equal((await api("/intention/assess", "POST", { text: "funny mysteries" })).status, "supported");
+  assert.equal((await api("/intention/assess", "POST", { text: "dragons" })).status, "supported");
+  assert.equal((await api("/intention/assess", "POST", { text: "books for a 3 year old" })).status, "mismatch");
+  assert.deepEqual(await api(`/session/${initial.sessionId}`), before, "Assessment must not change any session");
+});
