@@ -11,4 +11,9 @@ export interface BookThumb {
   title: string;
   /** @nullable */
   coverImageUrl: string | null;
+  /**
+     * Publication year from the catalog, when known
+     * @nullable
+     */
+  publicationYear?: number | null;
 }

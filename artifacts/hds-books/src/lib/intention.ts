@@ -160,7 +160,35 @@ export const MODE_NAME_MAX = 60;
 
 export function validateModeName(raw: string): { ok: true; name: string } | { ok: false; message: string } {
   const name = raw.replace(/\s+/g, ' ').trim();
-  if (!name) return { ok: false, message: 'Enter a name for this Mode.' };
+  if (!name) return { ok: false, message: 'Enter a name for this filter.' };
   if (name.length > MODE_NAME_MAX) return { ok: false, message: `Use ${MODE_NAME_MAX} characters or fewer.` };
   return { ok: true, name };
+}
+
+/** Leading filler phrases removed (once) by shortFilterLabel. Longest first. */
+export const FILLER_PHRASES = [
+  'books to be', 'books that are', 'books that', 'books about', 'books for', 'books with',
+  'a book about', 'a book for', 'something', 'i want', 'looking for',
+] as const;
+
+export const SHORT_LABEL_MAX = 28;
+
+function truncateLabel(text: string): string {
+  if (text.length <= SHORT_LABEL_MAX) return text;
+  const cut = text.slice(0, SHORT_LABEL_MAX + 1);
+  const space = cut.lastIndexOf(' ');
+  const head = (space > 0 ? cut.slice(0, space) : text.slice(0, SHORT_LABEL_MAX)).replace(/[\s,;:.]+$/, '');
+  return `${head}…`;
+}
+
+/** Deterministic short label for the Filter's text slot. No network calls. */
+export function shortFilterLabel(text: string): string {
+  const normalized = (normalizeWords(text) ?? '').replace(/[\s.,;:!?]+$/, '');
+  let rest = normalized;
+  for (const phrase of FILLER_PHRASES) {
+    const re = new RegExp(`^${phrase.replace(/ /g, '\\s+')}(?=\\s|$)`, 'i');
+    if (re.test(rest)) { rest = rest.replace(re, '').trim(); break; }
+  }
+  const label = rest ? capitalize(rest) : normalized;
+  return truncateLabel(label);
 }

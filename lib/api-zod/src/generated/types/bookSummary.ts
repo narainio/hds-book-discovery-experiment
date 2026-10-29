@@ -27,4 +27,9 @@ export interface BookSummary {
   catalogPrice: number | null;
   currency: string;
   formatLabel: string;
+  /**
+     * Publication year from the catalog, when known
+     * @nullable
+     */
+  publicationYear?: number | null;
 }

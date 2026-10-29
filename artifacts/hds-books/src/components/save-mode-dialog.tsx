@@ -59,7 +59,7 @@ export function SaveModeDialog({ open, onOpenChange, triggerLabel, suggestedName
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <button type="button" disabled={disabled} data-testid="button-save-mode"
-          className="min-h-11 px-3 inline-flex items-center rounded-lg border border-border bg-card text-role-ui text-foreground hover:bg-secondary disabled:opacity-50">
+          className="min-h-11 px-3 inline-flex items-center rounded-full border border-border bg-card text-role-ui text-foreground hover:bg-secondary disabled:opacity-50">
           {triggerLabel}
         </button>
       </DialogTrigger>
@@ -68,11 +68,11 @@ export function SaveModeDialog({ open, onOpenChange, triggerLabel, suggestedName
           <DialogHeader>
             <DialogTitle className="text-role-section-title font-serif text-left">{triggerLabel}</DialogTitle>
             <DialogDescription className="text-role-small text-muted-foreground text-left">
-              A Mode saves a Filter so you can return to it later.
+              A filter saves what you’re looking for so you can return to it later.
             </DialogDescription>
           </DialogHeader>
           <div className="mt-4">
-            <label htmlFor="mode-name" className="block text-role-ui text-foreground mb-1.5">Mode name</label>
+            <label htmlFor="mode-name" className="block text-role-ui text-foreground mb-1.5">Filter name</label>
             <input
               id="mode-name"
               type="text"
@@ -82,21 +82,21 @@ export function SaveModeDialog({ open, onOpenChange, triggerLabel, suggestedName
               aria-invalid={!!error}
               aria-describedby={`mode-name-help${error ? ' mode-name-error' : ''}`}
               data-testid="input-mode-name"
-              className="w-full h-12 px-3 text-role-ui rounded-lg border-2 border-border bg-background focus-visible:outline-none focus-visible:border-ring"
+              className="w-full h-12 px-3 text-role-ui rounded-full border-2 border-border bg-background focus-visible:outline-none focus-visible:border-ring"
             />
             {error && <p id="mode-name-error" role="alert" className="mt-1.5 text-role-small text-destructive" data-testid="text-save-mode-error">{error}</p>}
             <p id="mode-name-help" className="mt-2 text-role-small text-muted-foreground" data-testid="text-save-mode-help">
-              Saves what you’re looking for{hasExampleBook ? ' and the book in your Filter' : ''}. Your Cart, “Fewer like this” choices and result order aren’t saved. Saved in this browser only.
+              Saves what you’re looking for{hasExampleBook ? ' and the book in this filter' : ''}. Your Cart, “Fewer like this” choices and result order aren’t saved. Saved in this browser only.
             </p>
           </div>
           <DialogFooter className="mt-5 gap-2">
             <button type="button" onClick={() => onOpenChange(false)} data-testid="button-save-mode-cancel"
-              className="min-h-11 px-4 rounded-lg border border-border text-role-ui text-foreground hover:bg-secondary">
+              className="min-h-11 px-4 rounded-full border border-border text-role-ui text-foreground hover:bg-secondary">
               Cancel
             </button>
             <button type="submit" data-testid="button-save-mode-confirm"
-              className="min-h-11 px-5 rounded-lg bg-teal text-teal-foreground text-role-button hover:opacity-90">
-              Save Mode
+              className="min-h-11 px-5 rounded-full bg-teal text-teal-foreground text-role-button hover:opacity-90">
+              Save filter
             </button>
           </DialogFooter>
         </form>

@@ -106,9 +106,9 @@ export function WorkingContextProvider({ children }: { children: React.ReactNode
             book = { id: found.id, title: found.title, coverImageUrl: found.coverImageUrl ?? null };
           } catch (error) {
             if (!isNotFound(error)) {
-              return { ok: false, message: 'This Mode couldn’t be opened. Your current discovery and Cart are unchanged.' };
+              return { ok: false, message: 'This filter couldn’t be opened. Your current discovery and Cart are unchanged.' };
             }
-            notice = 'The book saved in this Mode is no longer available, so it was left out.';
+            notice = 'The book saved in this filter is no longer available, so it was left out.';
           }
         }
         replace({

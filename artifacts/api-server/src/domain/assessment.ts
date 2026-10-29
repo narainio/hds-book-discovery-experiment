@@ -43,7 +43,7 @@ export type IntentionAssessment = {
 
 /** Categories this prototype does not stock. Label is sentence-case for copy. */
 const CATEGORIES: Array<{ key: string; label: string; plural: string; words: string[] }> = [
-  { key: "grocery", label: "Grocery", plural: "groceries", words: ["groceries", "grocery", "food shopping", "milk", "snacks", "cereal"] },
+  { key: "grocery", label: "Grocery", plural: "groceries", words: ["groceries", "grocery", "food shopping", "milk", "snacks", "cereal", "pizza", "pizzas"] },
   { key: "toys", label: "Toy", plural: "toys", words: ["toys", "toy", "lego", "legos", "action figures", "dolls", "board games", "stuffed animals", "plushies"] },
   { key: "clothing", label: "Clothing", plural: "clothes", words: ["clothes", "clothing", "shoes", "sneakers", "shirts", "t-shirts", "jackets", "dresses", "outfits"] },
   { key: "electronics", label: "Electronics", plural: "electronics", words: ["electronics", "laptop", "laptops", "tablet", "tablets", "headphones", "phone", "phones", "video games", "game console"] },

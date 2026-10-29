@@ -54,6 +54,11 @@ export interface BookSummary {
   catalogPrice: number | null;
   currency: string;
   formatLabel: string;
+  /**
+     * Publication year from the catalog, when known
+     * @nullable
+     */
+  publicationYear?: number | null;
 }
 
 export interface BookThumb {
@@ -61,6 +66,11 @@ export interface BookThumb {
   title: string;
   /** @nullable */
   coverImageUrl: string | null;
+  /**
+     * Publication year from the catalog, when known
+     * @nullable
+     */
+  publicationYear?: number | null;
 }
 
 export interface RecommendationReason {

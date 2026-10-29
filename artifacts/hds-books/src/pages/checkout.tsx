@@ -86,7 +86,7 @@ export default function Checkout() {
     return (
       <div className="w-full max-w-2xl mx-auto p-8 text-center mt-12">
         <h2 className="text-role-section-title mb-4">Cart is empty</h2>
-        <Link href="/discover" className="text-teal hover:underline font-medium">Return to discovery</Link>
+        <Link href="/discover" className="text-foreground underline underline-offset-2 font-medium">Return to discovery</Link>
       </div>
     );
   }

@@ -9,9 +9,11 @@ interface BookCardProps {
   book: BookSummary;
   score?: number;
   reason?: RankedBook['reason'];
+  /** Published in the two most recent catalog years (shown as a New badge). */
+  isNew?: boolean;
 }
 
-export function BookCard({ book, reason }: BookCardProps) {
+export function BookCard({ book, reason, isNew = false }: BookCardProps) {
   const { view, pending, error, controller } = useYourFilter();
   const blocked = error?.kind === 'unsynced';
   const activeExample = view?.filter.book ?? null;
@@ -33,7 +35,7 @@ export function BookCard({ book, reason }: BookCardProps) {
   };
 
   return (
-    <article data-testid={`card-book-${book.id}`} className={`group flex flex-col h-full rounded-lg ${isExample ? 'ring-2 ring-teal/50 ring-offset-4 ring-offset-background' : ''}`}>
+    <article data-testid={`card-book-${book.id}`} className={`group flex flex-col h-full rounded-lg ${isExample ? 'ring-2 ring-primary/40 ring-offset-4 ring-offset-background' : ''}`}>
       <Link href={`/book/${book.id}`} tabIndex={-1} aria-hidden="true" className="block hover:opacity-95 transition-opacity">
         <div className="relative aspect-[2/3] w-full max-w-[200px] min-[420px]:max-w-none mx-auto bg-secondary/50 rounded-md overflow-hidden flex items-center justify-center mb-3">
           {book.hasCover && book.coverImageUrl ? (
@@ -44,12 +46,17 @@ export function BookCard({ book, reason }: BookCardProps) {
               <span className="text-role-small text-muted-foreground block">{book.author}</span>
             </div>
           )}
+          {isNew && (
+            <span className="absolute top-2 left-2 rounded-full bg-primary text-primary-foreground px-2.5 py-0.5 text-[14px] font-bold" data-testid={`badge-new-${book.id}`}>
+              New
+            </span>
+          )}
         </div>
       </Link>
 
       {(isExample || reason) && (
         <div className="mb-2">
-          <span className="text-[14px] md:text-[15px] font-medium text-teal px-2 py-0.5 bg-teal-soft rounded-sm leading-tight inline-block border border-teal/10" data-testid={`text-reason-${book.id}`}>
+          <span className="text-[14px] md:text-[15px] font-medium text-foreground px-2 py-0.5 bg-secondary rounded-md leading-tight inline-block border border-border" data-testid={`text-reason-${book.id}`}>
             {isExample ? 'In your Filter' : reason?.text}
           </span>
         </div>
@@ -69,10 +76,10 @@ export function BookCard({ book, reason }: BookCardProps) {
         aria-disabled={blocked || undefined}
         aria-label={accessibleLabel}
         data-testid={`button-use-example-${book.id}`}
-        className={`self-start inline-flex items-center gap-1.5 rounded-lg border px-3 min-h-11 text-role-ui transition-colors ${
+        className={`self-start inline-flex items-center gap-1.5 rounded-full border px-3 min-h-11 text-role-ui transition-colors ${
           isExample
-            ? 'bg-teal/10 border-teal/40 text-teal cursor-default'
-            : 'bg-card border-border text-foreground hover:border-teal hover:text-teal'
+            ? 'bg-secondary border-primary text-foreground cursor-default'
+            : 'bg-card border-input text-foreground hover:border-primary'
         } ${isPendingExample ? 'opacity-70 cursor-wait' : ''} ${blocked && !isExample ? 'opacity-50 cursor-not-allowed' : ''}`}
       >
         {isExample

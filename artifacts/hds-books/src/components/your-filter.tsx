@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { AlertCircle, BookOpen, Loader2, Pencil, RotateCw, X } from 'lucide-react';
+import { AlertCircle, ArrowRight, BookOpen, Loader2, Pencil, RotateCw, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { assessIntention } from '@workspace/api-client-react';
 import { useYourFilter } from '@/hooks/use-your-filter';
@@ -13,11 +13,13 @@ import {
   composeQuery,
   preferenceLabels,
   refinementOutcome,
+  shortFilterLabel,
   suggestModeName,
   visibleSuggestions,
 } from '@/lib/intention';
 import type { AssessmentOutcome } from '@/lib/intention';
 import { SaveModeDialog } from '@/components/save-mode-dialog';
+import { submitFilterText } from '@/lib/filter-text';
 
 function pendingText(pending: FilterInput | null, visible: FilterInput | null): string {
   if (!pending) return '';
@@ -51,6 +53,10 @@ export function YourFilter({ forceExpanded = false }: { forceExpanded?: boolean 
   const base = ctxMatches ? committed?.base ?? null : words;
   const refinements = ctxMatches ? committed?.refinements ?? [] : [];
   const sourceModeName = ctxMatches ? committed?.sourceModeName ?? null : null;
+  // Fixed age qualifier: only from the saved filter's own context (same regex as modeSummary).
+  const age = (committed?.sourceModeId ? committed?.sourceModeContext?.label : null)?.match(/\bage\s+(\d+)/i)?.[1] ?? null;
+  const filterTitle = sourceModeName ? `Filter – ${sourceModeName}` : 'Filter';
+  const shortLabel = words ? shortFilterLabel(words) : null;
 
   const sentinelRef = useRef<HTMLDivElement>(null);
   const ribbonRef = useRef<HTMLElement>(null);
@@ -173,7 +179,11 @@ export function YourFilter({ forceExpanded = false }: { forceExpanded?: boolean 
 
   // Focusing Edit must not replace it before its click/Enter event fires.
   // Only the expanded editor locks itself open while it contains focus.
-  const onFocus = () => { if (!compact) setFocusWithin(true); };
+  const onFocus = (e: React.FocusEvent) => {
+    // A result update focuses the region for announcement, not for editing.
+    // Only an actual control should pin the expanded editor open.
+    if (!compact && e.target !== e.currentTarget) setFocusWithin(true);
+  };
   const onBlur = (e: React.FocusEvent) => {
     if (ribbonRef.current?.contains(e.relatedTarget as Node | null)) return;
     setFocusWithin(false);
@@ -250,17 +260,19 @@ export function YourFilter({ forceExpanded = false }: { forceExpanded?: boolean 
   const submitFirst = async (e?: React.FormEvent, override?: string) => {
     e?.preventDefault();
     if (blocked || checking) return;
-    const text = normalizeWords(override ?? refineText);
-    if (!text) { setRefineNotice('Describe the books you’re looking for.'); return; }
+    if (!normalizeWords(override ?? refineText)) { setRefineNotice('Describe the books you’re looking for.'); return; }
     const mine = ++checkToken.current;
     setChecking('refine');
     setRefineNotice(null);
     setEditNotice(null);
     try {
-      const result = assessmentOutcome(await assessIntention({ text }));
-      if (mine !== checkToken.current) return;
-      if (result.kind === 'proceed') { setRefineTarget(text); actions.editIntention(text); }
-      else setEditNotice(result);
+      const result = await submitFilterText(override ?? refineText, {
+        assess: (text) => assessIntention({ text }),
+        editIntention: actions.editIntention,
+        setTarget: setRefineTarget,
+        isCurrent: () => mine === checkToken.current,
+      });
+      if (result.kind === 'blocked') setEditNotice(result.outcome);
     } catch {
       if (mine === checkToken.current) setEditNotice({ kind: 'blocked', message: UNINTERPRETABLE_MESSAGE, retryable: true });
     } finally {
@@ -291,12 +303,12 @@ export function YourFilter({ forceExpanded = false }: { forceExpanded?: boolean 
 
   const live = (
     <p className="sr-only" role="status" aria-live="polite" data-testid="status-filter-live">
-      {isPending ? pendingText(pending, filter) : saved ? `Saved “${saved}”. You can open it from Home.` : announcement}
+      {isPending ? pendingText(pending, filter) : saved ? `Saved “${saved}”. You can open it from My things.` : announcement}
     </p>
   );
 
   const pendingBadge = isPending && (
-    <span className="flex items-center gap-1.5 text-role-small text-teal shrink-0" data-testid="status-filter-pending">
+    <span className="flex items-center gap-1.5 text-role-small text-foreground shrink-0" data-testid="status-filter-pending">
       <Loader2 className="w-4 h-4 animate-spin motion-reduce:animate-none" aria-hidden="true" />
       Updating
     </span>
@@ -380,32 +392,31 @@ export function YourFilter({ forceExpanded = false }: { forceExpanded?: boolean 
   ) : null;
 
   const addForm = !editing && (
-    <form onSubmit={firstRequest ? submitFirst : submitRefinement} data-testid="form-add-refinement">
-      <label htmlFor="add-refinement" className="block text-role-small text-foreground mb-1">Add to your Filter</label>
+    <form onSubmit={submitFirst} data-testid="form-add-refinement">
+      <label htmlFor="add-refinement" className="block text-role-small text-foreground mb-1">Change what you’re looking for</label>
       <div className="flex flex-wrap gap-2">
         <input
           ref={refineRef}
           id="add-refinement"
           type="text"
           value={refineText}
-          maxLength={firstRequest ? MAX_WORDS_LENGTH : 200}
+          maxLength={MAX_WORDS_LENGTH}
           onChange={(e) => { setRefineText(e.target.value); setRefineNotice(null); setEditNotice(null); }}
-          placeholder={firstRequest ? 'Describe the books you’re looking for' : 'Add another preference, such as graphic novels'}
+          placeholder="For example, books to be read by an older sister"
           aria-describedby={refineNotice ? 'refine-notice' : editNotice ? 'first-request-notice' : undefined}
           enterKeyHint="go"
           data-testid="input-add-refinement"
-          className="grow basis-64 min-w-0 h-11 px-3 text-role-ui rounded-lg border-2 border-border bg-card focus-visible:outline-none focus-visible:border-ring placeholder:text-muted-foreground"
+          className="grow basis-64 min-w-0 h-12 px-4 text-role-ui rounded-full border-2 border-input bg-card focus-visible:outline-none focus-visible:border-ring placeholder:text-muted-foreground"
         />
-        <button type="submit" disabled={blocked || fieldBusy} data-testid="button-apply-refinement"
-          className="shrink-0 min-h-11 px-4 inline-flex items-center gap-2 rounded-lg bg-teal text-teal-foreground text-role-button hover:opacity-90 disabled:opacity-60">
-          {fieldBusy && <Loader2 className="w-4 h-4 animate-spin motion-reduce:animate-none" aria-hidden="true" />}
-          Update results
+        <button type="submit" disabled={blocked || fieldBusy} data-testid="button-apply-refinement" aria-label="Update results"
+          className="shrink-0 w-12 h-12 inline-flex items-center justify-center rounded-full bg-teal text-teal-foreground hover:bg-teal/90 disabled:opacity-60">
+          {fieldBusy ? <Loader2 className="w-5 h-5 animate-spin motion-reduce:animate-none" aria-hidden="true" /> : <ArrowRight className="w-5 h-5" aria-hidden="true" />}
         </button>
       </div>
       {refineNotice && (
         <p id="refine-notice" role="alert" className="mt-1 text-role-small text-destructive" data-testid="text-refine-notice">{refineNotice}</p>
       )}
-      {firstRequest && assessmentNotice('first-request-notice', (label, next) => {
+      {assessmentNotice('first-request-notice', (label, next) => {
         if (label === 'Continue with books') { setRefineText(next); void submitFirst(undefined, next); }
         else { setEditNotice(null); setRefineTarget(next); actions.editIntention(next); }
       })}
@@ -424,28 +435,77 @@ export function YourFilter({ forceExpanded = false }: { forceExpanded?: boolean 
     </form>
   );
 
-  const bookBlock = book && (
-    <div data-testid="block-filter-book">
-      <p className="text-role-small text-muted-foreground mb-1" id="filter-book-label">Book in your Filter</p>
-      <div className="rounded-md border border-teal/30 bg-teal/5 p-2 flex items-center gap-3" role="group" aria-labelledby="filter-book-label">
-        {book.coverImageUrl ? (
-          <img src={book.coverImageUrl} alt="" className="w-9 h-12 object-contain bg-background rounded-sm shrink-0" />
-        ) : (
-          <div className="w-9 h-12 bg-background border border-border rounded-sm flex items-center justify-center shrink-0">
-            <BookOpen className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
-          </div>
-        )}
-        <p className="min-w-0 flex-1 text-role-metadata text-foreground font-semibold break-words" title={book.title} data-testid="text-filter-book-title">{book.title}</p>
-        <button type="button" onClick={() => controller.removeBook()} data-testid="button-remove-book" disabled={blocked}
-          aria-label={'Remove ' + book.title + ' from Filter'}
-          className="min-h-11 px-2 inline-flex items-center gap-1 rounded-md text-role-small text-foreground hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed shrink-0">
-          <X className="w-4 h-4" aria-hidden="true" />
-          <span className="min-[420px]:hidden">Remove</span>
-          <span className="hidden min-[420px]:inline">Remove from Filter</span>
-        </button>
-      </div>
+  const slot = 'rounded-xl border-2 p-3 min-h-[88px]';
+  const qualifiers = (
+    <ul className="space-y-1 pt-1" aria-label="Fixed qualifiers" data-testid="list-filter-qualifiers">
+      <li className="text-role-ui text-foreground" data-testid="text-qualifier-type">Books <span className="text-muted-foreground">(product type)</span></li>
+      {age && <li className="text-role-ui text-foreground" data-testid="text-qualifier-age">{age} <span className="text-muted-foreground">(age appropriate)</span></li>}
+    </ul>
+  );
+
+  const textSlot = (
+    <div className={`${slot} ${shortLabel ? 'border-input bg-card' : 'border-dashed border-border bg-secondary/60'} flex items-start gap-2`} data-testid="slot-filter-text">
+      {shortLabel ? (
+        <>
+          <p className="min-w-0 flex-1 pt-1.5 text-role-ui font-semibold text-foreground break-words" title={words ?? undefined} data-testid="text-filter-intention">
+            <span aria-hidden="true">{shortLabel}</span>
+            <span className="sr-only">Words: {words}</span>
+          </p>
+          <button type="button" onClick={() => actions.editIntention(null)} disabled={blocked} aria-label="Remove words" data-testid="button-remove-words"
+            className="shrink-0 w-11 h-11 inline-flex items-center justify-center rounded-full text-foreground hover:bg-secondary disabled:opacity-50">
+            <X className="w-4 h-4" aria-hidden="true" />
+          </button>
+        </>
+      ) : (
+        <p className="pt-1.5 text-role-small text-muted-foreground" data-testid="text-slot-text-empty">Add a few words to shape this filter</p>
+      )}
     </div>
   );
+
+  const bookBlock = book ? (
+    <div className={`${slot} border-input bg-card`} data-testid="block-filter-book" role="group" aria-labelledby="filter-book-label">
+      <p className="sr-only" id="filter-book-label">Book in this filter</p>
+      <div className="flex items-start gap-3">
+        {book.coverImageUrl ? (
+          <img src={book.coverImageUrl} alt="" className="w-[72px] h-[104px] md:w-[80px] md:h-[116px] object-contain bg-secondary rounded-md shrink-0" data-testid="img-filter-book" />
+        ) : (
+          <div className="w-[72px] h-[104px] md:w-[80px] md:h-[116px] bg-secondary border border-border rounded-md flex items-center justify-center shrink-0">
+            <BookOpen className="w-6 h-6 text-muted-foreground" aria-hidden="true" />
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="text-role-metadata text-foreground font-semibold break-words line-clamp-3" title={book.title} data-testid="text-filter-book-title">{book.title}</p>
+          <button type="button" onClick={() => controller.removeBook()} data-testid="button-remove-book" disabled={blocked}
+            aria-label={'Remove ' + book.title + ' from Filter'}
+            className="mt-1 -ml-2 min-h-11 px-2 inline-flex items-center gap-1 rounded-full text-role-small text-foreground hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed">
+            <X className="w-4 h-4" aria-hidden="true" />
+            <span>Remove from Filter</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  ) : (
+    <div className={`${slot} border-dashed border-border bg-secondary/60`} data-testid="slot-filter-book-empty">
+      <p className="pt-1.5 text-role-small text-muted-foreground">Add one book to this filter</p>
+    </div>
+  );
+
+  const interpretation = (preferences.length > 0 || caveats.length > 0) && (
+    <div>
+      {preferences.length > 0 && (
+        <p className="text-role-small text-muted-foreground" data-testid="text-filter-preferences">
+          Ranked toward: <span className="text-foreground">{preferences.join(' · ')}</span>
+        </p>
+      )}
+      {caveats.length > 0 && (
+        <ul className="mt-0.5 text-role-small text-muted-foreground" data-testid="list-filter-caveats">
+          {caveats.map((cv) => <li key={cv}>{cv}</li>)}
+        </ul>
+      )}
+    </div>
+  );
+  // The legacy Edit Filter editor stays in code but is not offered on this screen.
+  void textRequest; void submitRefinement; void startEdit; void firstRequest;
 
   return (
     <>
@@ -467,22 +527,22 @@ export function YourFilter({ forceExpanded = false }: { forceExpanded?: boolean 
         {live}
         {compact ? (
           <div className="flex items-center gap-2 md:gap-3 min-h-11" data-testid="ribbon-compact">
-            <h2 id="your-filter-heading" className="sr-only min-[520px]:not-sr-only text-role-ui font-sans text-muted-foreground shrink-0">Your Filter</h2>
+            <h2 id="your-filter-heading" className="sr-only min-[520px]:not-sr-only text-role-ui font-sans text-foreground font-semibold shrink-0">{filterTitle}</h2>
             <div className="flex items-center gap-2 min-w-0 flex-1">
               {!words && !book && (
                 <span className="text-role-small text-muted-foreground truncate" data-testid="text-compact-empty">All books</span>
               )}
               {words && (
                 <span title={words} className="min-w-0 truncate text-role-ui text-foreground bg-card border border-border rounded-md px-2 py-1" data-testid="text-compact-words">
-                  “{words}”
+                  {shortLabel}
                 </span>
               )}
               {book && (
-                <span title={book.title} className="min-w-0 max-w-[45%] flex items-center gap-1.5 bg-teal/5 border border-teal/20 rounded-md pl-1 pr-2 py-0.5" data-testid="text-compact-book">
+                <span title={book.title} className="min-w-0 max-w-[45%] flex items-center gap-1.5 bg-secondary border border-border rounded-md pl-1 pr-2 py-0.5" data-testid="text-compact-book">
                   {book.coverImageUrl
                     ? <img src={book.coverImageUrl} alt="" className="w-5 h-7 object-contain rounded-sm shrink-0" />
                     : <BookOpen className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden="true" />}
-                  <span className="truncate text-role-small text-foreground"><span className="sr-only">In your Filter: </span>{book.title}</span>
+                  <span className="truncate text-role-small text-foreground"><span className="sr-only">In this filter: </span>{book.title}</span>
                 </span>
               )}
               {error && (
@@ -506,11 +566,11 @@ export function YourFilter({ forceExpanded = false }: { forceExpanded?: boolean 
         ) : (
           <div data-testid="ribbon-expanded">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-              <h2 id="your-filter-heading" className="text-role-ui font-semibold font-sans text-foreground">Your Filter</h2>
+              <h2 id="your-filter-heading" className="text-role-subsection-title text-foreground" data-testid="text-filter-heading">{filterTitle}</h2>
               <SaveModeDialog
                   open={dialogOpen}
                   onOpenChange={setDialogOpen}
-                  triggerLabel={sourceModeName ? 'Save as a new Mode' : 'Save as a Mode'}
+                  triggerLabel={sourceModeName ? 'Save as a new filter' : 'Save this filter'}
                   suggestedName={suggestModeName({ base, refinements, bookTitle: book?.title ?? null, sourceModeName })}
                   recipe={recipe}
                   hasExampleBook={!!book}
@@ -528,12 +588,6 @@ export function YourFilter({ forceExpanded = false }: { forceExpanded?: boolean 
                   )}
                 </div>
             </div>
-            {sourceModeName && (
-              <p className="text-role-small text-muted-foreground" data-testid="text-filter-source-mode">
-                Started from <strong className="font-semibold text-foreground">{sourceModeName}</strong>
-              </p>
-            )}
-
             {error && (
               <div role="alert" className="mt-2 rounded-md border border-destructive/40 bg-destructive/5 p-3" data-testid="alert-filter-error">
                 <p className="flex gap-2 text-role-small text-foreground">
@@ -560,19 +614,22 @@ export function YourFilter({ forceExpanded = false }: { forceExpanded?: boolean 
               </p>
             )}
 
-            {/* Reading order: text request, book in Filter, then the add field. On
-                wide screens the book sits in a second column beside both. */}
-            <div className={'mt-2 grid gap-3 ' + (book ? 'lg:grid-cols-[minmax(0,1fr)_minmax(300px,380px)] lg:gap-x-8' : 'max-w-[760px]')}>
-              {textRequest && <div className="min-w-0 lg:col-start-1">{textRequest}</div>}
-              {bookBlock && <div className="min-w-0 lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:self-start">{bookBlock}</div>}
-              {addForm && <div className="min-w-0 lg:col-start-1">{addForm}</div>}
+            {/* Louis's interactive screen: fixed qualifiers, one text slot, one product slot. */}
+            <div className="mt-3 grid gap-3 md:grid-cols-[minmax(160px,220px)_minmax(0,1fr)_minmax(240px,340px)] md:items-start">
+              {qualifiers}
+              <div className="min-w-0 space-y-3">
+                {textSlot}
+                {addForm}
+              </div>
+              <div className="min-w-0">{bookBlock}</div>
             </div>
+            {interpretation && <div className="mt-2">{interpretation}</div>}
 
             <div className="mt-1 flex flex-wrap items-center gap-x-3" data-testid="row-filter-actions">
-              <p id="clear-filter-description" className="sr-only">Clears this Filter. Saved Modes and your Cart stay unchanged.</p>
+              <p id="clear-filter-description" className="sr-only">Clears this filter. Saved filters and your Cart stay unchanged.</p>
               {confirmStartOver ? (
                 <span className="flex flex-wrap items-center gap-x-2 text-role-small text-foreground" data-testid="text-start-over-confirm">
-                  Clear this Filter? Saved Modes and your Cart stay unchanged.
+                  Clear this filter? Saved filters and your Cart stay unchanged.
                   <button type="button" onClick={startOver} data-testid="button-start-over-confirm" className="min-h-11 px-1 underline underline-offset-2 font-semibold">Clear Filter</button>
                   <button type="button" onClick={() => setConfirmStartOver(false)} className="min-h-11 px-1 underline underline-offset-2">Keep</button>
                 </span>
@@ -583,8 +640,8 @@ export function YourFilter({ forceExpanded = false }: { forceExpanded?: boolean 
                 </button>
               )}
               {saved && (
-                <p className="text-role-small text-teal font-medium" data-testid="text-save-success">
-                  Saved “{saved}”. You can open it from Home.
+                <p className="text-role-small text-foreground font-semibold" data-testid="text-save-success">
+                  Saved “{saved}”. You can open it from My things.
                 </p>
               )}
             </div>

@@ -12,5 +12,5 @@ export default function Picks() {
     setLoc('/discover', { replace: true });
     focusYourFilter();
   }, [setLoc]);
-  return <p className="p-8 text-role-body text-muted-foreground">Opening Your Filter...</p>;
+  return <p className="p-8 text-role-body text-muted-foreground">Opening the Filter…</p>;
 }

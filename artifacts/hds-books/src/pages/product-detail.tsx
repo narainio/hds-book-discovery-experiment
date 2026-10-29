@@ -88,7 +88,7 @@ export default function ProductDetail() {
     return (
       <div className="p-8 text-center mt-20">
         <h2 className="text-2xl font-serif font-semibold text-foreground mb-4">Book not found</h2>
-        <Link href="/discover" className="text-teal hover:underline font-medium">Return to discovery</Link>
+        <Link href="/discover" className="text-foreground underline underline-offset-2 font-medium">Return to discovery</Link>
       </div>
     );
   }
@@ -260,8 +260,8 @@ export default function ProductDetail() {
               data-testid="button-use-example"
               className={`w-full py-3.5 px-6 rounded-lg text-base font-semibold flex items-center justify-center gap-2 border transition-all ${
                 isExample
-                  ? 'bg-teal/10 border-teal/40 text-teal cursor-default'
-                  : 'bg-card border-border text-foreground hover:border-teal hover:text-teal'
+                  ? 'bg-secondary border-primary text-foreground cursor-default'
+                  : 'bg-card border-input text-foreground hover:border-primary'
               }`}
             >
               {isExample ? <Check className="w-5 h-5" aria-hidden="true" /> : <Sparkles className="w-5 h-5" aria-hidden="true" />}

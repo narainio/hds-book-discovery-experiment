@@ -26,6 +26,8 @@ test("supported book intentions, including topics that name other categories", (
     "funny mysteries",
     "books about toys",
     "a story about cooking",
+    "books about cooking",
+    "books about pizza",
     "dragons",
   ]) {
     const a = assessIntention(text);
@@ -39,6 +41,15 @@ test("unsupported categories are rejected without books", () => {
   assert.equal(a.status, "unsupported");
   assert.ok(a.unsupportedCategories.length > 0);
   assert.equal(a.supportedText, null);
+});
+
+test("pizza shopping is unsupported rather than a book intention", () => {
+  for (const text of ["pizza for Friday", "pizzas for dinner"]) {
+    const assessment = assessIntention(text);
+    assert.equal(assessment.status, "unsupported", text);
+    assert.equal(assessment.supportedText, null);
+    assert.deepEqual(assessment.unsupportedCategories.map((category) => category.key), ["grocery"]);
+  }
 });
 
 test("mixed requests keep only the supported book part", () => {

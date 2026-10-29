@@ -51,7 +51,7 @@ export function PriceDisplay({
           <span className="sr-only">Current price:</span>
           {formatPrice(price, currency)}
         </span>
-        <span className="rounded-[6px] bg-coral px-[9px] py-[6px] text-[15px] font-bold text-coral-foreground whitespace-nowrap leading-none">
+        <span className="rounded-[6px] bg-teal px-[9px] py-[6px] text-[15px] font-bold text-teal-foreground whitespace-nowrap leading-none">
           {SAVINGS_LABEL}
         </span>
       </div>

@@ -7,24 +7,27 @@ the original repository and deployment are maintained separately.
 
 ## Current experience
 
-- Start on Home (`/`): describe what you are shopping for, use an example
-  prompt, browse all books, continue the current discovery, or open a saved
-  Mode. Requests outside the books catalog are explained instead of matched.
-- Discovery lives at `/discover`. **Your Filter** shows the current request,
-  what shaped ranking, and what was not applied. **Edit Filter** replaces the
-  text; **Add to your Filter** adds another preference. Both preserve the book
-  signal and negative feedback.
+- Start on the personalized demo landing page (`/`). Ask anything retains
+  honest books-only assessment; pizza shopping is unsupported, while books
+  about cooking remain supported. Photo tiles and off-path controls are
+  explicit coming-soon features, not shopping functionality.
+- **My things** (`/my-things`) holds saved filters and Continue discovering,
+  alongside clearly labeled personal-SKU and list placeholders.
+- Discovery (`/discover`) shows **Filter – {name}** with fixed qualifiers,
+  one replaceable text string and one example book. Updating words preserves
+  the book and negative feedback. Short labels are deterministic display
+  text only: the full request reaches the unchanged interpreter.
 - Select one book with **Add to Filter**, or combine it with words. Internally
   this is the single similarity pivot: another selection replaces it rather
   than accumulating books. Removing it is not “Fewer like this” feedback.
-- **Save as a Mode** (or **Save as a new Mode**) creates a browser-local recipe:
+- **Save this filter** (or **Save as a new filter**) creates a browser-local recipe:
   request text, added preferences, source context and at most one book ID.
-  Cart, “Fewer like this” and result order are not saved. Opening a Mode copies
+  Cart, “Fewer like this” and result order are not saved. Opening a filter copies
   its recipe; later working changes do not update it automatically.
-- **Clear Filter** resets the working context while preserving saved Modes
+- **Clear Filter** resets the working context while preserving saved filters
   and Cart. Home suggestions populate the input without submitting. Continue
   discovering appears for an active Filter or a remembered browsing position.
-- Edit or remove either input independently in **Your Filter**.
+- Edit or remove either input independently in **Filter**.
 - Filter state and matching results update together, with recoverable errors.
 - Browse paginated recommendations, book details, and a separate demo cart.
 - One responsive Filter ribbon sits above the full-width result grid and
@@ -37,6 +40,48 @@ The initial public snapshot is tagged `feedback-baseline`.
 The seeded “Books for Johnny” Mode carries age context, not enforced
 personalization. Catalog grades are information about the available feed;
 age, price, length and safety requests are not hard eligibility constraints.
+
+### Presenter demo
+
+Landing → My things → Filter – Books for Johnny → replace words → select an
+example book → product detail → Add to cart → save a filter. The cart badge
+always reflects real session quantities; no demo items are seeded.
+
+Settings → Reset demo clears only `hds_pf_` keys in localStorage and
+sessionStorage, then fully reloads the app. A fresh session has an empty Cart
+and exactly one seeded Books for Johnny filter. It does not call the disabled
+server reset endpoint. This reset deliberately removes browser-local saved
+filters; ordinary Clear Filter does not.
+
+UI “filter” maps to the existing internal `Mode` recipe and storage keys;
+“My filters” is the saved Mode collection. The underlying additive refinement
+API and recipe format remain intact, but this screen uses replacement only.
+
+New releases use publication years, not arrival dates: the inspected catalog
+has years for 2,370/2,370 books and its newest years are 2025–2026 (1,501 books).
+The section selects at most eight qualifying books from the first loaded page,
+retains ranking order and hides below three. It never changes ranking or the
+main grid. `publicationYear` is an optional nullable API field.
+
+The app shares a light navy/red Inter theme; photography is confined to the
+landing page. Seven original WebP images live in `public/landing`, each below
+200 KB. The reviewed public export remains **text-only**: images are excluded,
+and the UI supplies soft-color fallbacks when they are unavailable.
+
+Final palette: navy `#1C2758` (14.18:1 on white), secondary text `#4A5675`
+(7.29:1 white; at least 6.02:1 on the header stops), red button and badge
+`#D12F22` (white text 5.07:1), logo `#E5392B`, errors `#9E2119`,
+focus `#1769AA`, input outlines `#7F90AE` (3.23:1 white), decorative border
+`#C9D4E5`, card border `#DCE4F0`, surfaces `#F2F6FC`, header
+`#DDEBFA` → white → `#FCE6DA`, decorative rule `#8EC5F0`.
+The logo red is reserved for large bold lettering; small text uses navy.
+
+Reset storage inventory: `hds_pf_experiment_session_id`,
+`hds_pf_demo_user_modes`, `hds_pf_demo_user_modes.unreadable`,
+`hds_pf_working_context` and sessionStorage `hds_pf_home_draft`;
+prefix-based removal also catches future demo keys. Coming-soon controls are
+landing products/categories, attachment/microphone, delivery, user/agent
+switching, and the placeholder filters, personal SKUs and lists.
 
 ## Repository layout
 

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Open+Sans:wght@600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Open+Sans:wght@600;700&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @plugin "@tailwindcss/typography";
@@ -62,76 +62,94 @@
 }
 
 :root {
-  /* HDS Colors */
-  --background: 40 31% 95%; /* #F7F4EE */
-  --foreground: 185 27% 17%; /* #203638 */
+  /* Presenter-demo palette (Noah's mock-up, re-sampled; contrast-checked). Names kept; roles noted. */
+  --background: 0 0% 100%; /* #FFFFFF page background */
+  --foreground: 229 52% 23%; /* #1C2758 navy text, 14.18:1 on white */
 
-  --card: 38 100% 98%; /* #FFFCF7 */
-  --card-foreground: 185 27% 17%;
-  --card-border: 38 20% 81%;
+  --card: 0 0% 100%; /* #FFFFFF card surface */
+  --card-foreground: 229 52% 23%;
+  --card-border: 216 40% 90%; /* #DCE4F0 */
 
-  --popover: 38 100% 98%;
-  --popover-foreground: 185 27% 17%;
-  --popover-border: 38 20% 81%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 229 52% 23%;
+  --popover-border: 216 40% 90%;
 
-  --primary: 185 27% 17%; /* Dark text as generic primary if needed */
-  --primary-foreground: 38 100% 98%;
+  --primary: 229 52% 23%; /* #1C2758 navy */
+  --primary-foreground: 0 0% 100%;
 
-  --secondary: 39 29% 91%; /* muted surface */
-  --secondary-foreground: 185 27% 17%;
+  --secondary: 216 63% 97%; /* #F2F6FC quiet surface */
+  --secondary-foreground: 229 52% 23%;
 
-  --muted: 39 29% 91%; /* #EFEAE1 */
-  --muted-foreground: 171 7% 37%; /* #586663 */
+  --muted: 216 63% 97%; /* #F2F6FC */
+  --muted-foreground: 223 23% 37%; /* #4A5675 secondary text: 7.29:1 white, 6.02:1 #DDEBFA, 6.07:1 #FCE6DA */
 
-  --accent: 8 70% 70%; /* #E88B7D - HDS Coral */
-  --accent-foreground: 185 27% 17%;
+  --accent: 216 63% 97%;
+  --accent-foreground: 229 52% 23%;
 
-  --destructive: 7 56% 44%; /* Darker red for AA normal-text contrast */
-  --destructive-foreground: 38 100% 98%;
+  --destructive: 4 73% 36%; /* #9E2119 errors, 7.82:1 on white; always with icon + text */
+  --destructive-foreground: 0 0% 100%;
 
-  --border: 38 20% 81%; /* #D8D1C6 */
-  --input: 38 20% 81%;
-  --ring: 206 76% 38%; /* #1769AA */
-  
-  --teal: 176 44% 25%; /* #245D59 */
-  --teal-foreground: 38 100% 98%;
-  --coral: 8 70% 70%; /* #E88B7D - HDS Coral, RGB 232 139 125 */
-  --coral-foreground: 185 27% 17%;
+  --border: 216 35% 84%; /* #C9D4E5 decorative borders */
+  --input: 218 22% 59%; /* #7F90AE input outline, 3.23:1 on white */
+  --ring: 207 76% 38%; /* #1769AA focus ring, 5.77:1 on white */
+
+  --teal: 4 72% 48%; /* ROLE: primary action fill, HDS red #D12F22; white text 5.07:1 */
+  --teal-foreground: 0 0% 100%;
+  --coral: 5 78% 53%; /* ROLE: HDS logo red #E5392B (large text, 3.5:1 on #DDEBFA) */
+  --coral-foreground: 0 0% 100%;
+
+  --header-from: 211 74% 92%; /* #DDEBFA */
+  --header-to: 21 85% 92%; /* #FCE6DA */
+  --rule: 206 77% 75%; /* #8EC5F0 decorative divider */
 
   --app-font-sans: 'Inter', sans-serif;
   --app-font-brand: 'Open Sans', 'Myriad Pro', Arial, sans-serif;
-  --app-font-serif: 'Source Serif 4', Georgia, serif;
+  --app-font-serif: 'Inter', sans-serif; /* headings use sans now */
   --app-font-mono: Menlo, monospace;
   --radius: 0.5rem; /* 8px */
 }
 
 /* Force light mode only as per spec */
 .dark {
-  --background: 40 31% 95%;
-  --foreground: 185 27% 17%;
-  --card: 38 100% 98%;
-  --card-foreground: 185 27% 17%;
-  --card-border: 38 20% 81%;
-  --popover: 38 100% 98%;
-  --popover-foreground: 185 27% 17%;
-  --popover-border: 38 20% 81%;
-  --primary: 185 27% 17%;
-  --primary-foreground: 38 100% 98%;
-  --secondary: 39 29% 91%;
-  --secondary-foreground: 185 27% 17%;
-  --muted: 39 29% 91%;
-  --muted-foreground: 171 7% 37%;
-  --accent: 8 70% 70%;
-  --accent-foreground: 185 27% 17%;
-  --destructive: 7 56% 44%;
-  --destructive-foreground: 38 100% 98%;
-  --border: 38 20% 81%;
-  --input: 38 20% 81%;
-  --ring: 206 76% 38%;
-  --teal: 176 44% 25%;
-  --teal-foreground: 38 100% 98%;
-  --coral: 8 70% 70%;
-  --coral-foreground: 185 27% 17%;
+  /* Same as :root; light mode only. Presenter-demo palette (Noah's mock-up, re-sampled; contrast-checked). Names kept; roles noted. */
+  --background: 0 0% 100%; /* #FFFFFF page background */
+  --foreground: 229 52% 23%; /* #1C2758 navy text, 14.18:1 on white */
+
+  --card: 0 0% 100%; /* #FFFFFF card surface */
+  --card-foreground: 229 52% 23%;
+  --card-border: 216 40% 90%; /* #DCE4F0 */
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 229 52% 23%;
+  --popover-border: 216 40% 90%;
+
+  --primary: 229 52% 23%; /* #1C2758 navy */
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 216 63% 97%; /* #F2F6FC quiet surface */
+  --secondary-foreground: 229 52% 23%;
+
+  --muted: 216 63% 97%; /* #F2F6FC */
+  --muted-foreground: 223 23% 37%; /* #4A5675 secondary text: 7.29:1 white, 6.02:1 #DDEBFA, 6.07:1 #FCE6DA */
+
+  --accent: 216 63% 97%;
+  --accent-foreground: 229 52% 23%;
+
+  --destructive: 4 73% 36%; /* #9E2119 errors, 7.82:1 on white; always with icon + text */
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 216 35% 84%; /* #C9D4E5 decorative borders */
+  --input: 218 22% 59%; /* #7F90AE input outline, 3.23:1 on white */
+  --ring: 207 76% 38%; /* #1769AA focus ring, 5.77:1 on white */
+
+  --teal: 4 72% 48%; /* ROLE: primary action fill, HDS red #D12F22; white text 5.07:1 */
+  --teal-foreground: 0 0% 100%;
+  --coral: 5 78% 53%; /* ROLE: HDS logo red #E5392B (large text, 3.5:1 on #DDEBFA) */
+  --coral-foreground: 0 0% 100%;
+
+  --header-from: 211 74% 92%; /* #DDEBFA */
+  --header-to: 21 85% 92%; /* #FCE6DA */
+  --rule: 206 77% 75%; /* #8EC5F0 decorative divider */
 }
 
 @layer base {
@@ -151,13 +169,14 @@
   }
   
   h1, h2, h3, h4, h5, h6 {
-    @apply font-serif;
+    @apply font-sans font-bold;
+    letter-spacing: -0.015em;
   }
 }
 
 @layer utilities {
   .text-role-display {
-    @apply font-serif font-semibold leading-[1.08];
+    @apply font-sans font-bold tracking-[-0.015em] leading-[1.08];
     font-size: 36px;
   }
   @media (min-width: 768px) {
@@ -167,7 +186,7 @@
   }
 
   .text-role-page-title {
-    @apply font-serif font-semibold leading-[1.12];
+    @apply font-sans font-bold tracking-[-0.015em] leading-[1.12];
     font-size: 34px;
   }
   @media (min-width: 768px) {
@@ -176,7 +195,7 @@
     }
   }
   .text-role-section-title {
-    @apply font-serif font-semibold leading-[1.18];
+    @apply font-sans font-bold tracking-[-0.015em] leading-[1.18];
     font-size: 28px;
   }
   @media (min-width: 768px) {
@@ -186,7 +205,7 @@
   }
 
   .text-role-subsection-title {
-    @apply font-serif font-semibold leading-[1.25];
+    @apply font-sans font-bold tracking-[-0.015em] leading-[1.25];
     font-size: 22px;
   }
   @media (min-width: 768px) {
@@ -196,7 +215,7 @@
   }
 
   .text-role-card-title {
-    @apply font-serif font-semibold leading-[1.28];
+    @apply font-sans font-bold tracking-[-0.015em] leading-[1.28];
     font-size: 18px;
   }
   @media (min-width: 768px) {
@@ -255,3 +274,20 @@
     font-size: 16px;
   }
 }
+
+.header-gradient {
+  background: linear-gradient(100deg, hsl(var(--header-from)) 0%, hsl(0 0% 100%) 50%, hsl(var(--header-to)) 100%);
+}
+.scrollbar-none { scrollbar-width: none; }
+.results-enter { animation: results-enter 220ms ease-out both; }
+@keyframes results-enter {
+  from { opacity: 0.45; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .results-enter { animation: none; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  button, a { transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease; }
+}
+.scrollbar-none::-webkit-scrollbar { display: none; }

@@ -22,12 +22,14 @@ export type BookSummaryDto = {
   catalogPrice: number | null;
   currency: string;
   formatLabel: string;
+  publicationYear?: number | null;
 };
 
 export type BookThumbDto = {
   id: string;
   title: string;
   coverImageUrl: string | null;
+  publicationYear?: number | null;
 };
 
 export function toBookSummary(product: Product): BookSummaryDto {
@@ -42,6 +44,7 @@ export function toBookSummary(product: Product): BookSummaryDto {
     catalogPrice: product.price,
     currency: product.currency,
     formatLabel: product.formatLabel,
+    publicationYear: product.publicationYear,
   };
 }
 
@@ -50,6 +53,7 @@ export function toBookThumb(product: Product): BookThumbDto {
     id: product.id,
     title: product.title,
     coverImageUrl: product.coverImageUrl,
+    publicationYear: product.publicationYear,
   };
 }
 

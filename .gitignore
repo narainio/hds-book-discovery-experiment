@@ -58,6 +58,7 @@ Thumbs.db
 .agents/
 screenshots/
 attached_assets/
+generated-artifacts/
 artifacts/review/
 
 # Private inputs and internal materials must not enter the public repository.

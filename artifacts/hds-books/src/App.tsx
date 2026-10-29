@@ -5,7 +5,8 @@ import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/not-found';
 import Discover from '@/pages/discover';
-import Home from '@/pages/home';
+import Landing from '@/pages/landing';
+import MyThings from '@/pages/my-things';
 import ProductDetail from '@/pages/product-detail';
 import Picks from '@/pages/picks';
 import Cart from '@/pages/cart';
@@ -29,7 +30,8 @@ function Router() {
     <Layout>
       <RoutedErrorBoundary>
         <Switch>
-          <Route path="/" component={Home} />
+          <Route path="/" component={Landing} />
+          <Route path="/my-things" component={MyThings} />
           <Route path="/discover" component={Discover} />
           <Route path="/book/:id" component={ProductDetail} />
           <Route path="/picks" component={Picks} />

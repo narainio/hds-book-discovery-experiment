@@ -1,5 +1,5 @@
 /**
- * Saved Modes: a small, versioned, validated browser-local repository for one
+ * Saved filters: a small, versioned, validated browser-local repository for one
  * simulated logged-in demo user. A Mode is a reusable Filter recipe, not a
  * live reference to session state. This is the only module that reads or
  * writes Mode storage.
@@ -131,7 +131,7 @@ export class ModeRepository {
   private read() {
     if (!this.storage) {
       this.writable = false;
-      this.notice = 'Saved Modes aren’t available in this browser.';
+      this.notice = 'Saved filters aren’t available in this browser.';
       this.publish();
       return;
     }
@@ -140,7 +140,7 @@ export class ModeRepository {
       raw = this.storage.getItem(MODES_STORAGE_KEY);
     } catch {
       this.writable = false;
-      this.notice = 'Saved Modes couldn’t be read in this browser.';
+      this.notice = 'Saved filters couldn’t be read in this browser.';
       this.publish();
       return;
     }
@@ -163,7 +163,7 @@ export class ModeRepository {
     if (record.version > MODES_SCHEMA_VERSION) {
       // Written by a newer build: show nothing, and never overwrite it.
       this.writable = false;
-      this.notice = 'Saved Modes were created by a newer version and can’t be used here.';
+      this.notice = 'Saved filters were created by a newer version and can’t be used here.';
       this.publish();
       return;
     }
@@ -171,7 +171,7 @@ export class ModeRepository {
     const valid = modes.filter((m): m is ModeDefinition => m !== null).slice(0, MAX_MODES);
     this.envelope = { version: 1, seeded: record.seeded === true || valid.length > 0, modes: valid };
     if (valid.length < modes.length) {
-      this.notice = 'Some saved Modes couldn’t be read and were left out.';
+      this.notice = 'Some saved filters couldn’t be read and were left out.';
     }
     this.publish();
   }
@@ -186,7 +186,7 @@ export class ModeRepository {
     }
     // Seeded is treated as done: recovery must not re-insert the demo Mode.
     this.envelope = { version: 1, seeded: true, modes: [] };
-    this.notice = 'Saved Modes couldn’t be read and were set aside.';
+    this.notice = 'Saved filters couldn’t be read and were set aside.';
     this.publish();
   }
 
@@ -226,14 +226,14 @@ export class ModeRepository {
 
   /** Always creates a new record with a stable new id; identical names are allowed. */
   save(input: NewModeInput): SaveResult {
-    if (!this.writable) return { ok: false, message: 'Your Mode couldn’t be saved in this browser. Your Filter is unchanged.' };
+    if (!this.writable) return { ok: false, message: 'Your filter couldn’t be saved in this browser. The current Filter is unchanged.' };
     if (this.envelope.modes.length >= MAX_MODES) {
       return { ok: false, message: `You can keep up to ${MAX_MODES} Modes in this demo.` };
     }
     const mode = this.build(input);
     const next: Envelope = { ...this.envelope, modes: [...this.envelope.modes, mode] };
     if (!this.write(next)) {
-      return { ok: false, message: 'Your Mode couldn’t be saved in this browser. Your Filter is unchanged.' };
+      return { ok: false, message: 'Your filter couldn’t be saved in this browser. The current Filter is unchanged.' };
     }
     this.envelope = next;
     this.publish();

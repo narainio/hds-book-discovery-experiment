@@ -140,17 +140,20 @@ export const CreateSessionResponse = zod.object({
   "pivot": zod.union([zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 }),zod.null()]).optional(),
   "picks": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 })),
   "negatives": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 })),
   "hasSignals": zod.boolean(),
   "signalCount": zod.number(),
@@ -186,17 +189,20 @@ export const GetSessionResponse = zod.object({
   "pivot": zod.union([zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 }),zod.null()]).optional(),
   "picks": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 })),
   "negatives": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 })),
   "hasSignals": zod.boolean(),
   "signalCount": zod.number(),
@@ -244,17 +250,20 @@ export const SetFilterResponse = zod.object({
   "pivot": zod.union([zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 }),zod.null()]).optional(),
   "picks": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 })),
   "negatives": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 })),
   "hasSignals": zod.boolean(),
   "signalCount": zod.number(),
@@ -277,7 +286,8 @@ export const SetFilterResponse = zod.object({
   "price": zod.number().nullable().describe('Selling price after the standard 20% reduction'),
   "catalogPrice": zod.number().nullable().describe('Original supplier catalog price'),
   "currency": zod.string(),
-  "formatLabel": zod.string()
+  "formatLabel": zod.string(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 }),
   "score": zod.number(),
   "reason": zod.union([zod.object({
@@ -299,17 +309,20 @@ export const SetFilterResponse = zod.object({
   "pivot": zod.union([zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 }),zod.null()]).optional(),
   "picks": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 })),
   "negatives": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 })),
   "hasSignals": zod.boolean(),
   "signalCount": zod.number(),
@@ -380,17 +393,20 @@ export const ResetSessionResponse = zod.object({
   "pivot": zod.union([zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 }),zod.null()]).optional(),
   "picks": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 })),
   "negatives": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 })),
   "hasSignals": zod.boolean(),
   "signalCount": zod.number(),
@@ -435,17 +451,20 @@ export const SetQueryResponse = zod.object({
   "pivot": zod.union([zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 }),zod.null()]).optional(),
   "picks": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 })),
   "negatives": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 })),
   "hasSignals": zod.boolean(),
   "signalCount": zod.number(),
@@ -481,17 +500,20 @@ export const ClearQueryResponse = zod.object({
   "pivot": zod.union([zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 }),zod.null()]).optional(),
   "picks": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 })),
   "negatives": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 })),
   "hasSignals": zod.boolean(),
   "signalCount": zod.number(),
@@ -519,7 +541,8 @@ export const GetPicksResponse = zod.object({
   "price": zod.number().nullable().describe('Selling price after the standard 20% reduction'),
   "catalogPrice": zod.number().nullable().describe('Original supplier catalog price'),
   "currency": zod.string(),
-  "formatLabel": zod.string()
+  "formatLabel": zod.string(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 })),
   "count": zod.number()
 })
@@ -556,17 +579,20 @@ export const AddPickResponse = zod.object({
   "pivot": zod.union([zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 }),zod.null()]).optional(),
   "picks": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 })),
   "negatives": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 })),
   "hasSignals": zod.boolean(),
   "signalCount": zod.number(),
@@ -602,17 +628,20 @@ export const ClearPicksResponse = zod.object({
   "pivot": zod.union([zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 }),zod.null()]).optional(),
   "picks": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 })),
   "negatives": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 })),
   "hasSignals": zod.boolean(),
   "signalCount": zod.number(),
@@ -649,17 +678,20 @@ export const RemovePickResponse = zod.object({
   "pivot": zod.union([zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 }),zod.null()]).optional(),
   "picks": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 })),
   "negatives": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 })),
   "hasSignals": zod.boolean(),
   "signalCount": zod.number(),
@@ -699,17 +731,20 @@ export const SetPivotResponse = zod.object({
   "pivot": zod.union([zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 }),zod.null()]).optional(),
   "picks": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 })),
   "negatives": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 })),
   "hasSignals": zod.boolean(),
   "signalCount": zod.number(),
@@ -745,17 +780,20 @@ export const ClearPivotResponse = zod.object({
   "pivot": zod.union([zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 }),zod.null()]).optional(),
   "picks": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 })),
   "negatives": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 })),
   "hasSignals": zod.boolean(),
   "signalCount": zod.number(),
@@ -795,17 +833,20 @@ export const AddNegativeResponse = zod.object({
   "pivot": zod.union([zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 }),zod.null()]).optional(),
   "picks": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 })),
   "negatives": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 })),
   "hasSignals": zod.boolean(),
   "signalCount": zod.number(),
@@ -842,17 +883,20 @@ export const RemoveNegativeResponse = zod.object({
   "pivot": zod.union([zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 }),zod.null()]).optional(),
   "picks": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 })),
   "negatives": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 })),
   "hasSignals": zod.boolean(),
   "signalCount": zod.number(),
@@ -894,17 +938,20 @@ export const GetDiscoverResponse = zod.object({
   "pivot": zod.union([zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 }),zod.null()]).optional(),
   "picks": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 })),
   "negatives": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 })),
   "hasSignals": zod.boolean(),
   "signalCount": zod.number(),
@@ -927,7 +974,8 @@ export const GetDiscoverResponse = zod.object({
   "price": zod.number().nullable().describe('Selling price after the standard 20% reduction'),
   "catalogPrice": zod.number().nullable().describe('Original supplier catalog price'),
   "currency": zod.string(),
-  "formatLabel": zod.string()
+  "formatLabel": zod.string(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 }),
   "score": zod.number(),
   "reason": zod.union([zod.object({
@@ -949,17 +997,20 @@ export const GetDiscoverResponse = zod.object({
   "pivot": zod.union([zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 }),zod.null()]).optional(),
   "picks": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 })),
   "negatives": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "coverImageUrl": zod.string().nullable()
+  "coverImageUrl": zod.string().nullable(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 })),
   "hasSignals": zod.boolean(),
   "signalCount": zod.number(),
@@ -996,7 +1047,8 @@ export const GetCartResponse = zod.object({
   "price": zod.number().nullable().describe('Selling price after the standard 20% reduction'),
   "catalogPrice": zod.number().nullable().describe('Original supplier catalog price'),
   "currency": zod.string(),
-  "formatLabel": zod.string()
+  "formatLabel": zod.string(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 }),
   "quantity": zod.number(),
   "lineTotal": zod.number()
@@ -1035,7 +1087,8 @@ export const AddCartItemResponse = zod.object({
   "price": zod.number().nullable().describe('Selling price after the standard 20% reduction'),
   "catalogPrice": zod.number().nullable().describe('Original supplier catalog price'),
   "currency": zod.string(),
-  "formatLabel": zod.string()
+  "formatLabel": zod.string(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 }),
   "quantity": zod.number(),
   "lineTotal": zod.number()
@@ -1074,7 +1127,8 @@ export const UpdateCartItemResponse = zod.object({
   "price": zod.number().nullable().describe('Selling price after the standard 20% reduction'),
   "catalogPrice": zod.number().nullable().describe('Original supplier catalog price'),
   "currency": zod.string(),
-  "formatLabel": zod.string()
+  "formatLabel": zod.string(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 }),
   "quantity": zod.number(),
   "lineTotal": zod.number()
@@ -1105,7 +1159,8 @@ export const RemoveCartItemResponse = zod.object({
   "price": zod.number().nullable().describe('Selling price after the standard 20% reduction'),
   "catalogPrice": zod.number().nullable().describe('Original supplier catalog price'),
   "currency": zod.string(),
-  "formatLabel": zod.string()
+  "formatLabel": zod.string(),
+  "publicationYear": zod.number().nullish().describe('Publication year from the catalog, when known')
 }),
   "quantity": zod.number(),
   "lineTotal": zod.number()

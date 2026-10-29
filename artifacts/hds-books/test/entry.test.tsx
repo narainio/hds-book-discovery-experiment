@@ -87,7 +87,7 @@ test("suggested Mode names are deterministic and grounded", () => {
   assert.equal(suggestModeName({ base: null, refinements: [], bookTitle: null, sourceModeName: null }), "My book discovery");
   const long = suggestModeName({ base: "a very long intention about dragons and wizards and castles in faraway lands", refinements: [], bookTitle: null, sourceModeName: null });
   assert.ok(long.length <= 48 && !long.endsWith(" "));
-  assert.deepEqual(validateModeName("   "), { ok: false, message: "Enter a name for this Mode." });
+  assert.deepEqual(validateModeName("   "), { ok: false, message: "Enter a name for this filter." });
   assert.equal(validateModeName("x".repeat(61)).ok, false);
   assert.deepEqual(validateModeName("  My   Mode "), { ok: true, name: "My Mode" });
 });
